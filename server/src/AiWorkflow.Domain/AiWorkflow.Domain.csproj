@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Domain depends on nothing (blueprint §2.1). -->
+
+</Project>

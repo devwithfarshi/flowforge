@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\AiWorkflow.Domain\AiWorkflow.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
