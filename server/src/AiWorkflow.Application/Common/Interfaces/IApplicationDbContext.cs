@@ -25,6 +25,10 @@ public interface IApplicationDbContext
 
     DbSet<Template> Templates { get; }
 
+    DbSet<Integration> Integrations { get; }
+
+    DbSet<IntegrationAccount> IntegrationAccounts { get; }
+
     DbSet<TEntity> Set<TEntity>()
         where TEntity : class;
 

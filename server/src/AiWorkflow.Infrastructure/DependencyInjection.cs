@@ -58,6 +58,7 @@ public static class DependencyInjection
         services.AddDataProtection();
         services.AddSingleton<IAccountTokenService, AccountTokenService>();
         services.AddSingleton<IEmailSender, DevLoggingEmailSender>();
+        services.AddSingleton<ICredentialEncryptor, CredentialEncryptor>();
 
         // Execution engine (§14): Hangfire on the same Postgres, executor registry with
         // a simulated fallback so every catalog node type runs today.

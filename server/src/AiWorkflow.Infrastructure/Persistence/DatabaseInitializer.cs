@@ -34,5 +34,6 @@ public static class DatabaseInitializer
         }
 
         await TemplateSeeder.SeedAsync(db, clock, ct);
+        await IntegrationSeeder.SeedAsync(db, ct);
     }
 }

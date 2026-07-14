@@ -29,6 +29,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<Template> Templates => Set<Template>();
 
+    public DbSet<Integration> Integrations => Set<Integration>();
+
+    public DbSet<IntegrationAccount> IntegrationAccounts => Set<IntegrationAccount>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresExtension("citext");
