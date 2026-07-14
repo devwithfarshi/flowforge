@@ -29,6 +29,8 @@ public interface IApplicationDbContext
 
     DbSet<IntegrationAccount> IntegrationAccounts { get; }
 
+    DbSet<Variable> Variables { get; }
+
     DbSet<TEntity> Set<TEntity>()
         where TEntity : class;
 

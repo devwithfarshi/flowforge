@@ -51,6 +51,7 @@ app.MapWorkflowEndpoints();
 app.MapExecutionEndpoints();
 app.MapTemplateEndpoints();
 app.MapIntegrationEndpoints();
+app.MapVariableEndpoints();
 app.MapHub<ExecutionHub>("/hubs/executions");
 
 app.MapHealthChecks("/health");

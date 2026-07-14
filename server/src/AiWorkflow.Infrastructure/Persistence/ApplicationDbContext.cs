@@ -33,6 +33,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<IntegrationAccount> IntegrationAccounts => Set<IntegrationAccount>();
 
+    public DbSet<Variable> Variables => Set<Variable>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresExtension("citext");
