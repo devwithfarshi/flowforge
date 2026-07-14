@@ -178,6 +178,39 @@ export const authApi = {
     });
   },
 
+  async loginWithGoogle(): Promise<PublicUser> {
+    return tx(() => {
+      // Simulated Google OAuth/OIDC: find-or-create the linked account, then start a session.
+      const email = "casey.morgan@gmail.com";
+      const c = coll<User>(KEYS.users);
+      const users = c.all();
+      let user = users.find((u) => u.email.toLowerCase() === email);
+      if (!user) {
+        user = {
+          id: uid("user"),
+          name: "Casey Morgan",
+          email,
+          password: "", // OAuth account — no local password
+          role: "Owner",
+          avatarColor: AVATAR[users.length % AVATAR.length],
+          jobTitle: "Product Manager",
+          company: "Northwind Labs",
+          emailVerified: true,
+          createdAt: new Date().toISOString(),
+        };
+        c.set([...users, user]);
+      }
+      write(KEYS.session, {
+        userId: user.id,
+        token: uid("tok"),
+        createdAt: new Date().toISOString(),
+        rememberMe: true,
+      } satisfies Session);
+      activityApi.log("auth", user.name, "signed in", "with Google");
+      return toPublic(user);
+    }, 550);
+  },
+
   async logout(): Promise<void> {
     return tx(() => write(KEYS.session, null), 120);
   },

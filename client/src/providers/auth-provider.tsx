@@ -25,6 +25,7 @@ interface AuthContextValue {
     email: string,
     password: string,
   ) => Promise<PublicUser>;
+  loginWithGoogle: () => Promise<PublicUser>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   setUser: (u: PublicUser | null) => void;
@@ -68,6 +69,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [],
   );
 
+  const loginWithGoogle = useCallback(async () => {
+    const u = await api.auth.loginWithGoogle();
+    setUser(u);
+    return u;
+  }, []);
+
   const logout = useCallback(async () => {
     await api.auth.logout();
     setUser(null);
@@ -75,8 +82,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router]);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, loading, login, register, logout, refresh, setUser }),
-    [user, loading, login, register, logout, refresh],
+    () => ({
+      user,
+      loading,
+      login,
+      register,
+      loginWithGoogle,
+      logout,
+      refresh,
+      setUser,
+    }),
+    [user, loading, login, register, loginWithGoogle, logout, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

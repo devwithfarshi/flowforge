@@ -99,6 +99,7 @@ Flowforge is an enterprise-grade platform for building, running, and monitoring 
 
 ### Authentication & User Management
 - Login, registration, logout, and "remember me"
+- Continue with Google (OAuth / OIDC) on sign‑in and sign‑up
 - Forgot password, reset password, and email verification
 - JWT access tokens with rotating refresh tokens and reuse detection
 - Session persistence and protected routes

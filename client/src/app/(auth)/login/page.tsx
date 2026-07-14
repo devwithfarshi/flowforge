@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { GoogleAuthButton } from "@/components/auth/google-button";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/switch";
@@ -12,7 +13,7 @@ import { useAuth } from "@/providers/auth-provider";
 import { useToast } from "@/providers/toast-provider";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const router = useRouter();
   const toast = useToast();
   const [email, setEmail] = useState("demo@flowforge.app");
@@ -23,6 +24,7 @@ export default function LoginPage() {
     {},
   );
   const [submitting, setSubmitting] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +48,19 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    try {
+      const u = await loginWithGoogle();
+      toast.success(`Welcome, ${u.name.split(" ")[0]}`);
+      router.replace("/dashboard");
+    } catch {
+      toast.error("Google sign-in failed", "Please try again.");
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   return (
     <div>
       <div className="mb-7">
@@ -55,6 +70,20 @@ export default function LoginPage() {
         <p className="mt-1.5 text-sm text-muted-foreground">
           Welcome back. Enter your details to continue.
         </p>
+      </div>
+
+      <GoogleAuthButton
+        onClick={handleGoogle}
+        loading={googleLoading}
+        disabled={submitting}
+      />
+
+      <div className="my-5 flex items-center gap-3">
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-[12px] text-muted-foreground">
+          or continue with email
+        </span>
+        <span className="h-px flex-1 bg-border" />
       </div>
 
       <div className="mb-5 rounded-lg border border-primary/20 bg-primary/5 px-3.5 py-2.5 text-[13px] text-foreground">

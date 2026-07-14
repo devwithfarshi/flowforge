@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { GoogleAuthButton } from "@/components/auth/google-button";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
 import { ApiError } from "@/lib/api";
@@ -20,12 +21,13 @@ const STRENGTH_COLOR = [
 ];
 
 export default function RegisterPage() {
-  const { register } = useAuth();
+  const { register, loginWithGoogle } = useAuth();
   const router = useRouter();
   const toast = useToast();
   const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const strength = passwordStrength(form.password);
 
   const set =
@@ -58,6 +60,19 @@ export default function RegisterPage() {
     }
   };
 
+  const handleGoogle = async () => {
+    setGoogleLoading(true);
+    try {
+      const u = await loginWithGoogle();
+      toast.success(`Welcome, ${u.name.split(" ")[0]}`);
+      router.replace("/dashboard");
+    } catch {
+      toast.error("Google sign-up failed", "Please try again.");
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   return (
     <div>
       <div className="mb-7">
@@ -67,6 +82,21 @@ export default function RegisterPage() {
         <p className="mt-1.5 text-sm text-muted-foreground">
           Start building AI workflows in minutes.
         </p>
+      </div>
+
+      <GoogleAuthButton
+        label="Sign up with Google"
+        onClick={handleGoogle}
+        loading={googleLoading}
+        disabled={submitting}
+      />
+
+      <div className="my-5 flex items-center gap-3">
+        <span className="h-px flex-1 bg-border" />
+        <span className="text-[12px] text-muted-foreground">
+          or sign up with email
+        </span>
+        <span className="h-px flex-1 bg-border" />
       </div>
 
       <form onSubmit={submit} className="space-y-4" noValidate>
