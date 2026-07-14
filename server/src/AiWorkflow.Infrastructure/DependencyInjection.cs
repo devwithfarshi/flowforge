@@ -9,6 +9,7 @@ using AiWorkflow.Infrastructure.Persistence;
 using AiWorkflow.Infrastructure.Persistence.Interceptors;
 using AiWorkflow.Infrastructure.Persistence.Repositories;
 using AiWorkflow.Infrastructure.Services;
+using AiWorkflow.Infrastructure.Storage;
 
 using Hangfire;
 using Hangfire.PostgreSql;
@@ -75,6 +76,12 @@ public static class DependencyInjection
         {
             services.AddSingleton<ICacheService, InMemoryCacheService>();
         }
+
+        // File storage (§12): Cloudinary when configured, loud failure otherwise.
+        var cloudinaryUrl = configuration["Cloudinary:Url"];
+        services.AddSingleton<IFileStorage>(string.IsNullOrEmpty(cloudinaryUrl)
+            ? new UnconfiguredFileStorage()
+            : new CloudinaryFileStorage(cloudinaryUrl));
 
         // Execution engine (§14): Hangfire on the same Postgres, executor registry with
         // a simulated fallback so every catalog node type runs today.

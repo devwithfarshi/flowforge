@@ -30,6 +30,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         builder.UseSetting("Redis:ConnectionString", _redis.GetConnectionString());
         builder.UseSetting("Database:MigrateOnStartup", "true");
 
+        // Signing is local HMAC — a dummy account exercises the real Cloudinary path.
+        builder.UseSetting("Cloudinary:Url", "cloudinary://test-key:test-secret@test-cloud");
+
         // Auth tests fire many requests from one IP — don't trip the brute-force limits.
         builder.UseSetting("RateLimiting:GlobalPermitPerMinute", "10000");
         builder.UseSetting("RateLimiting:AuthPermitPerMinute", "10000");

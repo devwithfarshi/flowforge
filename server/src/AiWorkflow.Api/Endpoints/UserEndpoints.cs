@@ -1,3 +1,4 @@
+using AiWorkflow.Application.Common.Interfaces;
 using AiWorkflow.Application.Users;
 
 using Mediator;
@@ -25,6 +26,13 @@ public static class UserEndpoints
             await mediator.Send(new ChangePasswordCommand(request.CurrentPassword, request.NewPassword), ct);
             return Results.NoContent();
         });
+
+        // §12/§5: signed direct upload — folder scoped per user, browser uploads
+        // straight to the provider and posts the resulting reference back.
+        group.MapPost("/me/avatar/sign", (IFileStorage fileStorage, ICurrentUser currentUser) =>
+            Results.Ok(fileStorage.CreateSignedUpload(
+                folder: $"users/{currentUser.Id}/avatars",
+                publicId: $"avatar-{Guid.CreateVersion7():N}")));
 
         return app;
     }
