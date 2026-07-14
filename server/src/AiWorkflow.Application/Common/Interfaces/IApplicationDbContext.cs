@@ -1,3 +1,5 @@
+using AiWorkflow.Domain.Entities;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace AiWorkflow.Application.Common.Interfaces;
@@ -9,6 +11,14 @@ namespace AiWorkflow.Application.Common.Interfaces;
 /// </summary>
 public interface IApplicationDbContext
 {
+    DbSet<User> Users { get; }
+
+    DbSet<RefreshToken> RefreshTokens { get; }
+
+    DbSet<UserPreferences> UserPreferences { get; }
+
+    DbSet<UserSettings> UserSettings { get; }
+
     DbSet<TEntity> Set<TEntity>()
         where TEntity : class;
 

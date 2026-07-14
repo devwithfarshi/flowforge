@@ -31,6 +31,11 @@ tab_width = 4
 # New line preferences
 insert_final_newline = true
 
+# EF Core migrations are generated code — exclude from style/analyzer enforcement.
+[**/Persistence/Migrations/*.cs]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none
+
 #### .NET Coding Conventions ####
 [*.{cs,vb}]
 
