@@ -1,4 +1,5 @@
 using AiWorkflow.Application.Common.Interfaces;
+using AiWorkflow.Infrastructure.Email;
 using AiWorkflow.Infrastructure.Identity;
 using AiWorkflow.Infrastructure.Persistence;
 using AiWorkflow.Infrastructure.Persistence.Interceptors;
@@ -46,6 +47,11 @@ public static class DependencyInjection
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
         services.AddSingleton<IRefreshTokenService, RefreshTokenService>();
         services.AddSingleton<IApiKeyService, ApiKeyService>();
+
+        // Signed reset/verify tokens (§4.3) + the dev email sink (real sender later).
+        services.AddDataProtection();
+        services.AddSingleton<IAccountTokenService, AccountTokenService>();
+        services.AddSingleton<IEmailSender, DevLoggingEmailSender>();
 
         return services;
     }

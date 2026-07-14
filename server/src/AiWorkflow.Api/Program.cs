@@ -1,3 +1,4 @@
+using AiWorkflow.Api.Endpoints;
 using AiWorkflow.Api.Extensions;
 using AiWorkflow.Api.Middleware;
 using AiWorkflow.Application;
@@ -34,6 +35,8 @@ app.UseCors("frontend");
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapAuthEndpoints();
 
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
