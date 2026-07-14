@@ -71,9 +71,11 @@ public sealed class CreateWorkflowHandler(IApplicationDbContext db, ICurrentUser
         }
 
         db.Workflows.Add(workflow);
+        var ownerName = await WorkflowStore.OwnerName(db, currentUser, ct);
+        await Activity.Audit.Log(
+            db, userId, "created workflow", workflow.Name, "workflow", clock.UtcNow, ct, ownerName);
         await db.SaveChangesAsync(ct);
 
-        var ownerName = await WorkflowStore.OwnerName(db, currentUser, ct);
         return WorkflowDto.From(workflow, ownerName);
     }
 }

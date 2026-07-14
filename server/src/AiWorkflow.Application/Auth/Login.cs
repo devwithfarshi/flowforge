@@ -45,6 +45,8 @@ public sealed class LoginHandler(
             jwtTokenService, refreshTokenService, clock);
         db.RefreshTokens.Add(refreshToken);
 
+        await Activity.Audit.Log(
+            db, user.Id, "signed in", "from this device", "auth", clock.UtcNow, ct, user.Name);
         await db.SaveChangesAsync(ct);
 
         return result;

@@ -98,6 +98,14 @@ public sealed class ConnectIntegrationHandler(
 
         db.IntegrationAccounts.Add(IntegrationAccount.Connect(
             userId, integration.Id, command.Label, encrypted, clock.UtcNow));
+
+        // §7: connecting emits a notification + audit entry (mock parity).
+        db.Notifications.Add(Domain.Entities.Notification.Push(
+            userId, "integration", $"{integration.Name} connected",
+            $"Account \"{command.Label}\" is now connected.", href: null, clock.UtcNow));
+        await Activity.Audit.Log(
+            db, userId, "connected integration", integration.Name, "integration", clock.UtcNow, ct);
+
         await db.SaveChangesAsync(ct);
 
         var accounts = await db.IntegrationAccounts.AsNoTracking()

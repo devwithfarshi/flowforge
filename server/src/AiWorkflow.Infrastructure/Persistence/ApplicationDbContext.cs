@@ -35,6 +35,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<Variable> Variables => Set<Variable>();
 
+    public DbSet<Notification> Notifications => Set<Notification>();
+
+    public DbSet<ActivityEntry> ActivityEntries => Set<ActivityEntry>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresExtension("citext");

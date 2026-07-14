@@ -31,6 +31,10 @@ public interface IApplicationDbContext
 
     DbSet<Variable> Variables { get; }
 
+    DbSet<Notification> Notifications { get; }
+
+    DbSet<ActivityEntry> ActivityEntries { get; }
+
     DbSet<TEntity> Set<TEntity>()
         where TEntity : class;
 

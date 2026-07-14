@@ -11,7 +11,7 @@ namespace AiWorkflow.Application.Workflows;
 /// </summary>
 public sealed record DuplicateWorkflowCommand(Guid Id) : IRequest<WorkflowDto>;
 
-public sealed class DuplicateWorkflowHandler(IApplicationDbContext db, ICurrentUser currentUser)
+public sealed class DuplicateWorkflowHandler(IApplicationDbContext db, ICurrentUser currentUser, IDateTime clock)
     : IRequestHandler<DuplicateWorkflowCommand, WorkflowDto>
 {
     public async ValueTask<WorkflowDto> Handle(DuplicateWorkflowCommand command, CancellationToken ct)
@@ -20,9 +20,11 @@ public sealed class DuplicateWorkflowHandler(IApplicationDbContext db, ICurrentU
 
         var copy = Workflow.DuplicateFrom(source);
         db.Workflows.Add(copy);
+        var ownerName = await WorkflowStore.OwnerName(db, currentUser, ct);
+        await Activity.Audit.Log(
+            db, source.OwnerId, "duplicated workflow", source.Name, "workflow", clock.UtcNow, ct, ownerName);
         await db.SaveChangesAsync(ct);
 
-        var ownerName = await WorkflowStore.OwnerName(db, currentUser, ct);
         return WorkflowDto.From(copy, ownerName);
     }
 }

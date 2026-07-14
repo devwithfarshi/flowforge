@@ -120,7 +120,8 @@ public sealed class CreateVariableValidator : AbstractValidator<CreateVariableCo
     }
 }
 
-public sealed class CreateVariableHandler(IApplicationDbContext db, ICurrentUser currentUser, ICredentialEncryptor encryptor)
+public sealed class CreateVariableHandler(
+    IApplicationDbContext db, ICurrentUser currentUser, ICredentialEncryptor encryptor, IDateTime clock)
     : IRequestHandler<CreateVariableCommand, VariableDto>
 {
     public async ValueTask<VariableDto> Handle(CreateVariableCommand command, CancellationToken ct)
@@ -135,6 +136,8 @@ public sealed class CreateVariableHandler(IApplicationDbContext db, ICurrentUser
         var variable = Variable.Create(userId, command.Key, storedValue, scope, environment, command.Description);
 
         db.Variables.Add(variable);
+        await Activity.Audit.Log(
+            db, userId, "created variable", command.Key, "variable", clock.UtcNow, ct);
         await db.SaveChangesAsync(ct);
 
         return VariableMapper.ToDto(variable, encryptor);

@@ -17,7 +17,7 @@ namespace AiWorkflow.Application.Templates;
 /// </summary>
 public sealed record InstallTemplateCommand(Guid TemplateId) : IRequest<WorkflowDto>;
 
-public sealed class InstallTemplateHandler(IApplicationDbContext db, ICurrentUser currentUser)
+public sealed class InstallTemplateHandler(IApplicationDbContext db, ICurrentUser currentUser, IDateTime clock)
     : IRequestHandler<InstallTemplateCommand, WorkflowDto>
 {
     private static readonly (string Type, string Label)[] StarterNodes =
@@ -54,9 +54,11 @@ public sealed class InstallTemplateHandler(IApplicationDbContext db, ICurrentUse
         workflow.UpdateGraph(nodes, edges, []);
 
         db.Workflows.Add(workflow);
+        var ownerName = await WorkflowStore.OwnerName(db, currentUser, ct);
+        await Activity.Audit.Log(
+            db, userId, "installed template", template.Name, "workflow", clock.UtcNow, ct, ownerName);
         await db.SaveChangesAsync(ct);
 
-        var ownerName = await WorkflowStore.OwnerName(db, currentUser, ct);
         return WorkflowDto.From(workflow, ownerName);
     }
 }
