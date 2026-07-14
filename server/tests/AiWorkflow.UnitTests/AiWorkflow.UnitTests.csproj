@@ -18,6 +18,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\AiWorkflow.Domain\AiWorkflow.Domain.csproj" />
     <ProjectReference Include="..\..\src\AiWorkflow.Application\AiWorkflow.Application.csproj" />
+    <ProjectReference Include="..\..\src\AiWorkflow.Infrastructure\AiWorkflow.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

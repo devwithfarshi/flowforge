@@ -1,4 +1,5 @@
 using AiWorkflow.Application.Common.Interfaces;
+using AiWorkflow.Infrastructure.Identity;
 using AiWorkflow.Infrastructure.Persistence;
 using AiWorkflow.Infrastructure.Persistence.Interceptors;
 using AiWorkflow.Infrastructure.Persistence.Repositories;
@@ -34,6 +35,17 @@ public static class DependencyInjection
         services.AddScoped<IApplicationDbContext>(sp => sp.GetRequiredService<ApplicationDbContext>());
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+
+        // Identity primitives (§4.1/§4.3): fail fast on misconfigured Jwt section (§11).
+        services.AddOptions<JwtOptions>()
+            .Bind(configuration.GetSection(JwtOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<IJwtTokenService, JwtTokenService>();
+        services.AddSingleton<IRefreshTokenService, RefreshTokenService>();
+        services.AddSingleton<IApiKeyService, ApiKeyService>();
 
         return services;
     }
