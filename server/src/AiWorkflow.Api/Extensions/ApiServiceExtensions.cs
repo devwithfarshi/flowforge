@@ -1,13 +1,16 @@
 using System.Text;
 using System.Threading.RateLimiting;
 
+using AiWorkflow.Api.Authentication;
 using AiWorkflow.Api.Middleware;
 using AiWorkflow.Api.Services;
 using AiWorkflow.Application.Common.Interfaces;
 
 using Asp.Versioning;
 
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -110,8 +113,8 @@ public static class ApiServiceExtensions
                 name: "postgres",
                 tags: ["ready"]);
 
-        // JWT bearer (§4.1): validates issuer/audience/signature/lifetime. Inbound claim
-        // mapping is off so handlers see the raw sub/email/role claims.
+        // JWT bearer (§4.1) + API-key scheme (§4.4). Inbound claim mapping is off so
+        // handlers see the raw sub/email/role claims.
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
             {
@@ -126,12 +129,42 @@ public static class ApiServiceExtensions
                     RoleClaimType = "role",
                     ClockSkew = TimeSpan.FromSeconds(30),
                 };
-            });
-        services.AddAuthorization();
+            })
+            .AddScheme<AuthenticationSchemeOptions, ApiKeyAuthenticationHandler>(
+                ApiKeyAuthenticationHandler.SchemeName, options => { });
+
+        services.AddAuthorization(options =>
+        {
+            // Default: authenticated via JWT bearer OR API key.
+            options.DefaultPolicy = new AuthorizationPolicyBuilder(
+                    JwtBearerDefaults.AuthenticationScheme, ApiKeyAuthenticationHandler.SchemeName)
+                .RequireAuthenticatedUser()
+                .Build();
+
+            // §4.4 scoped policies: interactive JWT sessions are unrestricted; API keys
+            // must carry the scope (e.g. a CI key with only workflows:read).
+            options.AddPolicy(Policies.WorkflowsRead, p => WithScope(p, "workflows:read"));
+            options.AddPolicy(Policies.WorkflowsWrite, p => WithScope(p, "workflows:write"));
+        });
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, CurrentUser>();
 
         return services;
     }
+
+    private static void WithScope(AuthorizationPolicyBuilder policy, string scope) =>
+        policy
+            .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme, ApiKeyAuthenticationHandler.SchemeName)
+            .RequireAuthenticatedUser()
+            .RequireAssertion(context =>
+                !context.User.HasClaim(ApiKeyAuthenticationHandler.SchemeClaim, "apikey")
+                || context.User.HasClaim(ApiKeyAuthenticationHandler.ScopeClaim, scope));
+}
+
+/// <summary>Authorization policy names (§4.4).</summary>
+public static class Policies
+{
+    public const string WorkflowsRead = "scope:workflows:read";
+    public const string WorkflowsWrite = "scope:workflows:write";
 }

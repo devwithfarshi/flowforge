@@ -35,6 +35,8 @@ public interface IApplicationDbContext
 
     DbSet<ActivityEntry> ActivityEntries { get; }
 
+    DbSet<ApiKey> ApiKeys { get; }
+
     DbSet<TEntity> Set<TEntity>()
         where TEntity : class;
 

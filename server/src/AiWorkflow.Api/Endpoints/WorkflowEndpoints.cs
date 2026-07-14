@@ -25,11 +25,16 @@ public static class WorkflowEndpoints
 
     public static IEndpointRouteBuilder MapWorkflowEndpoints(this IEndpointRouteBuilder app)
     {
+        // Two policy groups (§4.4): API keys need workflows:read / workflows:write;
+        // interactive JWT sessions pass both.
+        var read = app.MapGroup("/api/v1/workflows")
+            .WithTags("Workflows")
+            .RequireAuthorization(Extensions.Policies.WorkflowsRead);
         var group = app.MapGroup("/api/v1/workflows")
             .WithTags("Workflows")
-            .RequireAuthorization();
+            .RequireAuthorization(Extensions.Policies.WorkflowsWrite);
 
-        group.MapGet("/", async (
+        read.MapGet("/", async (
             string? search,
             string? status,
             string? trigger,
@@ -43,7 +48,7 @@ public static class WorkflowEndpoints
             Results.Ok(await mediator.Send(
                 new ListWorkflowsQuery(search, status, trigger, tag, sort, page, pageSize, includeArchived ?? false), ct)));
 
-        group.MapGet("/{id:guid}", async (Guid id, IMediator mediator, CancellationToken ct) =>
+        read.MapGet("/{id:guid}", async (Guid id, IMediator mediator, CancellationToken ct) =>
             Results.Ok(await mediator.Send(new GetWorkflowQuery(id), ct)));
 
         group.MapPost("/", async (WorkflowRequest request, IMediator mediator, CancellationToken ct) =>
