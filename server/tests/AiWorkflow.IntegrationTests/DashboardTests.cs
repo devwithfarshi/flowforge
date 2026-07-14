@@ -37,6 +37,45 @@ public class DashboardTests
         (await response.Content.ReadFromJsonAsync<JsonElement>(Json))!;
 
     [Fact]
+    public async Task Stats_AreCachedInRedis_AndInvalidatedWhenARunCompletes()
+    {
+        var client = await AuthedClient();
+
+        // Prime the per-user cache (zero workflows), then create one: the cached
+        // snapshot keeps serving until something invalidates it.
+        var first = await ReadJson(await client.GetAsync("/api/v1/dashboard/stats"));
+        Assert.Equal(0, first.GetProperty("totalWorkflows").GetInt32());
+
+        var wfId = (await ReadJson(await client.PostAsJsonAsync(
+            "/api/v1/workflows", new { name = "Cache buster" }))).GetProperty("id").GetString();
+
+        var cached = await ReadJson(await client.GetAsync("/api/v1/dashboard/stats"));
+        Assert.Equal(0, cached.GetProperty("totalWorkflows").GetInt32());
+
+        // A completed run busts the cache (§7 step 4) → fresh numbers.
+        var run = await client.PostAsync($"/api/v1/workflows/{wfId}/run", content: null);
+        var executionId = (await ReadJson(run)).GetProperty("id").GetString();
+        var deadline = DateTimeOffset.UtcNow.AddSeconds(30);
+        while (DateTimeOffset.UtcNow < deadline)
+        {
+            var status = (await ReadJson(await client.GetAsync($"/api/v1/executions/{executionId}")))
+                .GetProperty("status").GetString();
+            if (status is "success" or "failed")
+            {
+                break;
+            }
+
+            await Task.Delay(250);
+        }
+
+        await Task.Delay(500); // completion handlers run post-publish
+
+        var fresh = await ReadJson(await client.GetAsync("/api/v1/dashboard/stats"));
+        Assert.Equal(1, fresh.GetProperty("totalWorkflows").GetInt32());
+        Assert.Equal(1, fresh.GetProperty("totalExecutions").GetInt32());
+    }
+
+    [Fact]
     public async Task FreshUser_GetsZeroedStats_With100SuccessRate()
     {
         var client = await AuthedClient();

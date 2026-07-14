@@ -1,4 +1,5 @@
 using AiWorkflow.Application.Common.Interfaces;
+using AiWorkflow.Infrastructure.Caching;
 using AiWorkflow.Infrastructure.Email;
 using AiWorkflow.Infrastructure.Executions;
 using AiWorkflow.Infrastructure.Executions.Executors;
@@ -15,6 +16,8 @@ using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+
+using StackExchange.Redis;
 
 namespace AiWorkflow.Infrastructure;
 
@@ -59,6 +62,19 @@ public static class DependencyInjection
         services.AddSingleton<IAccountTokenService, AccountTokenService>();
         services.AddSingleton<IEmailSender, DevLoggingEmailSender>();
         services.AddSingleton<ICredentialEncryptor, CredentialEncryptor>();
+
+        // Cache (§13): Redis when configured, in-memory fallback for a clean checkout.
+        var redisConnectionString = configuration["Redis:ConnectionString"];
+        if (!string.IsNullOrEmpty(redisConnectionString))
+        {
+            services.AddSingleton<IConnectionMultiplexer>(
+                _ => ConnectionMultiplexer.Connect(redisConnectionString));
+            services.AddSingleton<ICacheService, RedisCacheService>();
+        }
+        else
+        {
+            services.AddSingleton<ICacheService, InMemoryCacheService>();
+        }
 
         // Execution engine (§14): Hangfire on the same Postgres, executor registry with
         // a simulated fallback so every catalog node type runs today.

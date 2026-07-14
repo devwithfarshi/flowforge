@@ -29,6 +29,7 @@ public static class DependencyInjection
         // caching) slot in here as their tasks land.
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
         services.AddScoped(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+        services.AddScoped(typeof(IPipelineBehavior<,>), typeof(CachingBehavior<,>));
 
         services.AddValidatorsFromAssembly(assembly, includeInternalTypes: true);
 

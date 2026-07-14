@@ -76,7 +76,7 @@ public sealed class LogExecutionActivityHandler(IApplicationDbContext db, IDateT
 }
 
 /// <summary>Materialized counters on the workflow row — cheap dashboard reads (§3.5).</summary>
-public sealed class UpdateWorkflowCountersHandler(IApplicationDbContext db, IDateTime clock)
+public sealed class UpdateWorkflowCountersHandler(IApplicationDbContext db, ICacheService cache, IDateTime clock)
     : INotificationHandler<ExecutionCompleted>
 {
     public async ValueTask Handle(ExecutionCompleted notification, CancellationToken ct)
@@ -89,5 +89,8 @@ public sealed class UpdateWorkflowCountersHandler(IApplicationDbContext db, IDat
 
         workflow.RecordExecution(notification.Success, clock.UtcNow);
         await db.SaveChangesAsync(ct);
+
+        // §7 step 4: a finished run invalidates the owner's dashboard cache.
+        await cache.RemoveAsync($"{Dashboard.DashboardStatsQuery.KeyPrefix}:{workflow.OwnerId}", ct);
     }
 }

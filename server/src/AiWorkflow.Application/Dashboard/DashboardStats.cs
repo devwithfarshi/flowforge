@@ -22,9 +22,16 @@ public sealed record DashboardStatsDto(
 
 /// <summary>
 /// `GET /dashboard/stats` (§6.2): owner-scoped aggregates + a 14-day run trend
-/// (oldest day first, UTC buckets). Redis caching joins in the caching task (§13).
+/// (oldest day first, UTC buckets). Cached per user (§13); ExecutionCompleted busts it.
 /// </summary>
-public sealed record DashboardStatsQuery : IRequest<DashboardStatsDto>;
+public sealed record DashboardStatsQuery : IRequest<DashboardStatsDto>, ICacheableQuery
+{
+    public const string KeyPrefix = "dashboard:stats";
+
+    public string CacheKeyPrefix => KeyPrefix;
+
+    public TimeSpan CacheTtl => TimeSpan.FromSeconds(60);
+}
 
 public sealed class DashboardStatsHandler(IApplicationDbContext db, ICurrentUser currentUser, IDateTime clock)
     : IRequestHandler<DashboardStatsQuery, DashboardStatsDto>
