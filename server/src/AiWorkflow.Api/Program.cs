@@ -55,6 +55,7 @@ app.MapVariableEndpoints();
 app.MapNotificationEndpoints();
 app.MapActivityEndpoints();
 app.MapApiKeyEndpoints();
+app.MapDashboardEndpoints();
 app.MapHub<ExecutionHub>("/hubs/executions");
 
 app.MapHealthChecks("/health");
