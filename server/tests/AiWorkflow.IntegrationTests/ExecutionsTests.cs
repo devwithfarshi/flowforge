@@ -12,7 +12,8 @@ namespace AiWorkflow.IntegrationTests;
 /// the engine executes against Postgres; /executions list/detail/recent mirror the mock.
 /// Tests poll the execution until it reaches a terminal status.
 /// </summary>
-public class ExecutionsTests : IClassFixture<ApiFactory>
+[Collection(ApiCollection.Name)]
+public class ExecutionsTests
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 

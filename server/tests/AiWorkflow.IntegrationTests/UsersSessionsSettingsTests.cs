@@ -11,7 +11,8 @@ namespace AiWorkflow.IntegrationTests;
 /// Task 9 contract tests: PATCH /users/me, POST /users/me/password, /sessions
 /// list/revoke/revoke-others, and /me/preferences + /me/settings.
 /// </summary>
-public class UsersSessionsSettingsTests : IClassFixture<ApiFactory>
+[Collection(ApiCollection.Name)]
+public class UsersSessionsSettingsTests
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 

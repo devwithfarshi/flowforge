@@ -6,6 +6,7 @@ using AiWorkflow.Api.Realtime;
 using AiWorkflow.Application;
 using AiWorkflow.Application.Common.Interfaces;
 using AiWorkflow.Infrastructure;
+using AiWorkflow.Infrastructure.Persistence;
 
 using Mediator;
 
@@ -48,6 +49,7 @@ app.MapSessionEndpoints();
 app.MapMeEndpoints();
 app.MapWorkflowEndpoints();
 app.MapExecutionEndpoints();
+app.MapTemplateEndpoints();
 app.MapHub<ExecutionHub>("/hubs/executions");
 
 app.MapHealthChecks("/health");
@@ -59,6 +61,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+await app.Services.InitializeDatabaseAsync();
 
 app.Run();
 

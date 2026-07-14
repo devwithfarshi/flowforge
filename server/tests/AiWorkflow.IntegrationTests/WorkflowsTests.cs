@@ -12,7 +12,8 @@ namespace AiWorkflow.IntegrationTests;
 /// list filters/sort/pagination — mirroring the mock workflowApi semantics.
 /// Each test registers its own user, so data is naturally isolated by ownership.
 /// </summary>
-public class WorkflowsTests : IClassFixture<ApiFactory>
+[Collection(ApiCollection.Name)]
+public class WorkflowsTests
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 

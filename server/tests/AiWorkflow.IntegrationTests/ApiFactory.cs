@@ -24,6 +24,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:Postgres", _postgres.GetConnectionString());
+        builder.UseSetting("Database:MigrateOnStartup", "true");
 
         // Auth tests fire many requests from one IP — don't trip the brute-force limits.
         builder.UseSetting("RateLimiting:GlobalPermitPerMinute", "10000");

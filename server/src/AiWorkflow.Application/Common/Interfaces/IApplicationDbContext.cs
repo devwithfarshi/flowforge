@@ -23,6 +23,8 @@ public interface IApplicationDbContext
 
     DbSet<Execution> Executions { get; }
 
+    DbSet<Template> Templates { get; }
+
     DbSet<TEntity> Set<TEntity>()
         where TEntity : class;
 

@@ -7,6 +7,7 @@ services:
       - ConnectionStrings__Postgres=Host=postgres;Database=flowforge;Username=flow;Password=flow
       - Redis__ConnectionString=redis:6379
       - Jwt__SigningKey=flowforge-local-compose-signing-key-not-for-production!
+      - Database__MigrateOnStartup=true
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_started }

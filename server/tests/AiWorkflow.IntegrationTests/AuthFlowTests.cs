@@ -11,7 +11,8 @@ namespace AiWorkflow.IntegrationTests;
 /// End-to-end auth contract tests (§18): real HTTP through the pipeline against a
 /// real Postgres. Cookies are managed manually so rotation/replay can be exercised.
 /// </summary>
-public class AuthFlowTests : IClassFixture<ApiFactory>
+[Collection(ApiCollection.Name)]
+public class AuthFlowTests
 {
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
