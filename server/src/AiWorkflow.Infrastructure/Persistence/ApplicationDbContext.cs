@@ -3,6 +3,7 @@ using AiWorkflow.Domain.Entities;
 
 using Microsoft.EntityFrameworkCore;
 
+
 namespace AiWorkflow.Infrastructure.Persistence;
 
 /// <summary>
@@ -23,6 +24,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<UserSettings> UserSettings => Set<UserSettings>();
 
     public DbSet<Workflow> Workflows => Set<Workflow>();
+
+    public DbSet<Execution> Executions => Set<Execution>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

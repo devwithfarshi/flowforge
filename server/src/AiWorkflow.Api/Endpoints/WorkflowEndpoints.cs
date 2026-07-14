@@ -1,3 +1,4 @@
+using AiWorkflow.Application.Executions;
 using AiWorkflow.Application.Workflows;
 using AiWorkflow.Domain.ValueObjects;
 
@@ -82,6 +83,13 @@ public static class WorkflowEndpoints
 
         group.MapPatch("/{id:guid}/status", async (Guid id, SetStatusRequest request, IMediator mediator, CancellationToken ct) =>
             Results.Ok(await mediator.Send(new SetWorkflowStatusCommand(id, request.Status), ct)));
+
+        // §14.2: enqueue + return the queued execution; progress streams over SignalR.
+        group.MapPost("/{id:guid}/run", async (Guid id, IMediator mediator, CancellationToken ct) =>
+        {
+            var execution = await mediator.Send(new RunWorkflowCommand(id), ct);
+            return Results.Accepted($"/api/v1/executions/{execution.Id}", execution);
+        });
 
         return app;
     }

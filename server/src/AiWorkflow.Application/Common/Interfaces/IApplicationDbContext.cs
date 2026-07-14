@@ -21,6 +21,8 @@ public interface IApplicationDbContext
 
     DbSet<Workflow> Workflows { get; }
 
+    DbSet<Execution> Executions { get; }
+
     DbSet<TEntity> Set<TEntity>()
         where TEntity : class;
 

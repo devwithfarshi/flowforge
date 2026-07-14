@@ -1,7 +1,10 @@
 using AiWorkflow.Api.Endpoints;
 using AiWorkflow.Api.Extensions;
+using AiWorkflow.Api.Hubs;
 using AiWorkflow.Api.Middleware;
+using AiWorkflow.Api.Realtime;
 using AiWorkflow.Application;
+using AiWorkflow.Application.Common.Interfaces;
 using AiWorkflow.Infrastructure;
 
 using Mediator;
@@ -26,6 +29,9 @@ builder.Services.AddMediator((MediatorOptions options) =>
     options.Assemblies = [typeof(AiWorkflow.Application.DependencyInjection)];
 });
 
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<IRealtimeNotifier, SignalRRealtimeNotifier>();
+
 var app = builder.Build();
 
 app.UseExceptionHandler();
@@ -41,6 +47,8 @@ app.MapUserEndpoints();
 app.MapSessionEndpoints();
 app.MapMeEndpoints();
 app.MapWorkflowEndpoints();
+app.MapExecutionEndpoints();
+app.MapHub<ExecutionHub>("/hubs/executions");
 
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });

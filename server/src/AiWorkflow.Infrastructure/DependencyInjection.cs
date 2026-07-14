@@ -1,10 +1,16 @@
 using AiWorkflow.Application.Common.Interfaces;
 using AiWorkflow.Infrastructure.Email;
+using AiWorkflow.Infrastructure.Executions;
+using AiWorkflow.Infrastructure.Executions.Executors;
 using AiWorkflow.Infrastructure.Identity;
+using AiWorkflow.Infrastructure.Jobs;
 using AiWorkflow.Infrastructure.Persistence;
 using AiWorkflow.Infrastructure.Persistence.Interceptors;
 using AiWorkflow.Infrastructure.Persistence.Repositories;
 using AiWorkflow.Infrastructure.Services;
+
+using Hangfire;
+using Hangfire.PostgreSql;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -52,6 +58,28 @@ public static class DependencyInjection
         services.AddDataProtection();
         services.AddSingleton<IAccountTokenService, AccountTokenService>();
         services.AddSingleton<IEmailSender, DevLoggingEmailSender>();
+
+        // Execution engine (§14): Hangfire on the same Postgres, executor registry with
+        // a simulated fallback so every catalog node type runs today.
+        services.AddHangfire(config => config
+            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+            .UseSimpleAssemblyNameTypeSerializer()
+            .UseRecommendedSerializerSettings()
+            .UsePostgreSqlStorage(
+                options => options.UseNpgsqlConnection(connectionString),
+                new PostgreSqlStorageOptions
+                {
+                    // Default 15s makes manual runs feel dead; runs should start ~instantly.
+                    QueuePollInterval = TimeSpan.FromMilliseconds(500),
+                }));
+        services.AddHangfireServer(options =>
+            options.SchedulePollingInterval = TimeSpan.FromSeconds(1));
+
+        services.AddSingleton<IJobScheduler, HangfireJobScheduler>();
+        services.AddSingleton<SimulatedNodeExecutor>();
+        services.AddSingleton<INodeExecutor, ManualTriggerExecutor>();
+        services.AddSingleton<NodeExecutorRegistry>();
+        services.AddScoped<IExecutionEngine, WorkflowExecutionEngine>();
 
         return services;
     }
