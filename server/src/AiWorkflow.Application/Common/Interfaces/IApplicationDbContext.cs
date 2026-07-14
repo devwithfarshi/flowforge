@@ -19,6 +19,8 @@ public interface IApplicationDbContext
 
     DbSet<UserSettings> UserSettings { get; }
 
+    DbSet<Workflow> Workflows { get; }
+
     DbSet<TEntity> Set<TEntity>()
         where TEntity : class;
 

@@ -40,6 +40,7 @@ app.MapAuthEndpoints();
 app.MapUserEndpoints();
 app.MapSessionEndpoints();
 app.MapMeEndpoints();
+app.MapWorkflowEndpoints();
 
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
