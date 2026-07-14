@@ -30,14 +30,16 @@ public class JwtTokenServiceTests
     public void CreateAccessToken_CarriesExpectedClaims()
     {
         var user = User.Register("Ada", "ada@example.com", "hash", "#7c3aed");
+        var sessionId = Guid.CreateVersion7();
 
-        var accessToken = CreateService().CreateAccessToken(user);
+        var accessToken = CreateService().CreateAccessToken(user, sessionId);
 
         var jwt = new JsonWebTokenHandler().ReadJsonWebToken(accessToken.Token);
         Assert.Equal(user.Id.ToString(), jwt.Subject);
         Assert.Equal("ada@example.com", jwt.GetClaim("email").Value);
         Assert.Equal("Owner", jwt.GetClaim("role").Value);
         Assert.NotEmpty(jwt.GetClaim("jti").Value);
+        Assert.Equal(sessionId.ToString(), jwt.GetClaim("sid").Value);
         Assert.Equal("flowforge-api", jwt.Issuer);
         Assert.Contains("flowforge-client", jwt.Audiences);
     }
@@ -47,7 +49,7 @@ public class JwtTokenServiceTests
     {
         var user = User.Register("Ada", "ada@example.com", "hash", "#7c3aed");
 
-        var accessToken = CreateService(accessTokenMinutes: 15).CreateAccessToken(user);
+        var accessToken = CreateService(accessTokenMinutes: 15).CreateAccessToken(user, Guid.CreateVersion7());
 
         Assert.Equal(Now.AddMinutes(15), accessToken.ExpiresAt);
 
@@ -59,11 +61,12 @@ public class JwtTokenServiceTests
     public void CreateAccessToken_JtiIsUniquePerToken()
     {
         var user = User.Register("Ada", "ada@example.com", "hash", "#7c3aed");
+        var sessionId = Guid.CreateVersion7();
         var service = CreateService();
         var handler = new JsonWebTokenHandler();
 
-        var first = handler.ReadJsonWebToken(service.CreateAccessToken(user).Token);
-        var second = handler.ReadJsonWebToken(service.CreateAccessToken(user).Token);
+        var first = handler.ReadJsonWebToken(service.CreateAccessToken(user, sessionId).Token);
+        var second = handler.ReadJsonWebToken(service.CreateAccessToken(user, sessionId).Token);
 
         Assert.NotEqual(first.GetClaim("jti").Value, second.GetClaim("jti").Value);
     }

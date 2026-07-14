@@ -20,7 +20,6 @@ internal static class SessionIssuer
         IRefreshTokenService refreshTokenService,
         IDateTime clock)
     {
-        var accessToken = jwtTokenService.CreateAccessToken(user);
         var generated = refreshTokenService.Generate();
         var now = clock.UtcNow;
         var expiresAt = now.Add(refreshTokenService.Lifetime);
@@ -36,6 +35,9 @@ internal static class SessionIssuer
             client.Location,
             expiresAt,
             now);
+
+        // Access token carries sid = this session's row id (current-session detection, §5).
+        var accessToken = jwtTokenService.CreateAccessToken(user, entity.Id);
 
         var result = new AuthResult(
             user.Adapt<UserDto>(),

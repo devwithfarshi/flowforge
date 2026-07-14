@@ -23,5 +23,10 @@ public class ValidationException : Exception
             .ToDictionary(g => g.Key, g => g.ToArray());
     }
 
+    public ValidationException(string propertyName, string message)
+        : this([new ValidationFailure(propertyName, message)])
+    {
+    }
+
     public IDictionary<string, string[]> Errors { get; }
 }

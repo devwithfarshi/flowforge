@@ -10,5 +10,8 @@ public interface ICurrentUser
 
     string? Email { get; }
 
+    /// <summary>The device session (refresh-token row id) this access token belongs to.</summary>
+    Guid? SessionId { get; }
+
     bool IsAuthenticated { get; }
 }

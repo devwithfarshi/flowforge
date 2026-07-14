@@ -20,7 +20,7 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, IDateTime cloc
 
     private readonly JwtOptions _options = options.Value;
 
-    public AccessToken CreateAccessToken(User user)
+    public AccessToken CreateAccessToken(User user, Guid sessionId)
     {
         var now = clock.UtcNow;
         var expiresAt = now.AddMinutes(_options.AccessTokenMinutes);
@@ -41,6 +41,7 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options, IDateTime cloc
                 new Claim(JwtRegisteredClaimNames.Email, user.Email),
                 new Claim("role", user.Role.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.CreateVersion7().ToString()),
+                new Claim("sid", sessionId.ToString()),
             ]),
         };
 

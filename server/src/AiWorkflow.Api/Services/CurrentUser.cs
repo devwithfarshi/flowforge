@@ -18,5 +18,8 @@ public sealed class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICur
 
     public string? Email => Principal?.FindFirstValue("email");
 
+    public Guid? SessionId =>
+        Guid.TryParse(Principal?.FindFirstValue("sid"), out var sid) ? sid : null;
+
     public bool IsAuthenticated => Principal?.Identity?.IsAuthenticated is true;
 }

@@ -6,10 +6,12 @@ namespace AiWorkflow.Application.Common.Interfaces;
 public sealed record AccessToken(string Token, DateTimeOffset ExpiresAt);
 
 /// <summary>
-/// Mints short-lived JWT access tokens (§4.1): claims sub, email, role, jti, iat, exp.
+/// Mints short-lived JWT access tokens (§4.1): claims sub, email, role, jti, sid, iat, exp.
+/// `sid` is the refresh-token row id — the device session this access token belongs to,
+/// used for "current session" detection on /sessions and change-password (§5).
 /// Validation is handled by the JWT bearer middleware, not this service.
 /// </summary>
 public interface IJwtTokenService
 {
-    AccessToken CreateAccessToken(User user);
+    AccessToken CreateAccessToken(User user, Guid sessionId);
 }
