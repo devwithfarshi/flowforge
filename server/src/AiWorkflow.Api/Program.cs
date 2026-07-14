@@ -37,6 +37,19 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 app.UseMiddleware<CorrelationIdMiddleware>();
+
+// §15: nosniff, DENY framing, referrer policy, strict CSP, permissions policy.
+// The API serves JSON only, so the restrictive defaults are safe; Swagger UI (dev)
+// gets same-origin relaxations from the library's defaults.
+app.UseSecurityHeaders(new HeaderPolicyCollection()
+    .AddDefaultApiSecurityHeaders());
+
+if (app.Environment.IsProduction())
+{
+    app.UseHsts();
+    app.UseHttpsRedirection();
+}
+
 app.UseSerilogRequestLogging();
 app.UseCors("frontend");
 app.UseRateLimiter();

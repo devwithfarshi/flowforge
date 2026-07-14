@@ -44,4 +44,17 @@ public class SmokeTests : IClassFixture<WebApplicationFactory<Program>>
 
         Assert.True(response.Headers.Contains("X-Correlation-Id"));
     }
+
+    [Fact]
+    public async Task Responses_CarrySecurityHeaders()
+    {
+        using var client = _factory.CreateClient();
+
+        var response = await client.GetAsync("/health/live");
+
+        Assert.Equal("nosniff", response.Headers.GetValues("X-Content-Type-Options").Single());
+        Assert.True(response.Headers.Contains("Referrer-Policy"));
+        Assert.True(response.Headers.Contains("Content-Security-Policy"));
+        Assert.False(response.Headers.Contains("Server"));
+    }
 }
