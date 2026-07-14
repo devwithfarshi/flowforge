@@ -1,0 +1,8 @@
+# Picked up by BuildKit for docker/Dockerfile (blueprint §19.1).
+**/bin/
+**/obj/
+**/.git
+**/.env
+docs/
+docker/
+tests/
