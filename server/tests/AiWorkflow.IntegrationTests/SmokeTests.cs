@@ -3,14 +3,16 @@ using Microsoft.AspNetCore.Mvc.Testing;
 namespace AiWorkflow.IntegrationTests;
 
 /// <summary>
-/// Bootstrap smoke tests: the app host starts and the P0 endpoints respond.
-/// No database is required — liveness has no dependencies and Swagger is static.
+/// Bootstrap smoke tests: the shared app host starts and the P0 endpoints respond.
+/// Uses <see cref="ApiFactory"/> (same collection as other API tests) so Hangfire's
+/// process-wide JobStorage isn't torn down by a second in-process host.
 /// </summary>
-public class SmokeTests : IClassFixture<WebApplicationFactory<Program>>
+[Collection(ApiCollection.Name)]
+public class SmokeTests
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly ApiFactory _factory;
 
-    public SmokeTests(WebApplicationFactory<Program> factory)
+    public SmokeTests(ApiFactory factory)
     {
         _factory = factory;
     }
