@@ -15,6 +15,8 @@ public interface IApplicationDbContext
 
     DbSet<RefreshToken> RefreshTokens { get; }
 
+    DbSet<ExternalLogin> ExternalLogins { get; }
+
     DbSet<UserPreferences> UserPreferences { get; }
 
     DbSet<UserSettings> UserSettings { get; }

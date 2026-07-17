@@ -3,6 +3,7 @@
   <ItemGroup>
     <PackageReference Include="CloudinaryDotNet" />
     <PackageReference Include="EFCore.NamingConventions" />
+    <PackageReference Include="Google.Apis.Auth" />
     <PackageReference Include="Hangfire.AspNetCore" />
     <PackageReference Include="Hangfire.PostgreSql" />
     <!-- Hangfire pins a vulnerable Newtonsoft 11.x transitively; lift to patched 13.x. -->

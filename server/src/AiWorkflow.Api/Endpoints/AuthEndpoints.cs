@@ -14,6 +14,8 @@ public static class AuthEndpoints
 
     public sealed record LoginRequest(string Email, string Password, bool RememberMe = false);
 
+    public sealed record GoogleAuthRequest(string IdToken);
+
     public sealed record ForgotPasswordRequest(string Email);
 
     public sealed record ResetPasswordRequest(string Token, string Password);
@@ -43,6 +45,14 @@ public static class AuthEndpoints
         {
             var result = await mediator.Send(
                 new LoginCommand(request.Email, request.Password, request.RememberMe, ResolveClient(http)), ct);
+            SetRefreshCookie(http, result);
+            return Results.Ok(new AuthResponse(result.AccessToken, result.AccessTokenExpiresAt, result.User));
+        });
+
+        group.MapPost("/google", async (GoogleAuthRequest request, HttpContext http, IMediator mediator, CancellationToken ct) =>
+        {
+            var result = await mediator.Send(
+                new GoogleAuthCommand(request.IdToken, ResolveClient(http)), ct);
             SetRefreshCookie(http, result);
             return Results.Ok(new AuthResponse(result.AccessToken, result.AccessTokenExpiresAt, result.User));
         });

@@ -58,6 +58,13 @@ public static class DependencyInjection
         services.AddSingleton<IRefreshTokenService, RefreshTokenService>();
         services.AddSingleton<IApiKeyService, ApiKeyService>();
 
+        // Google sign-in (§4.5): fail fast on a missing client id (see server/.env.example).
+        services.AddOptions<GoogleOptions>()
+            .Bind(configuration.GetSection(GoogleOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+        services.AddSingleton<IGoogleIdTokenValidator, GoogleIdTokenValidator>();
+
         // Signed reset/verify tokens (§4.3) + the dev email sink (real sender later).
         services.AddDataProtection();
         services.AddSingleton<IAccountTokenService, AccountTokenService>();

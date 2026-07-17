@@ -33,10 +33,6 @@ public sealed class RegisterHandler(
     IDateTime clock)
     : IRequestHandler<RegisterCommand, AuthResult>
 {
-    // Mirrors the frontend AVATAR palette (client/src/lib/api.ts).
-    private static readonly string[] AvatarPalette =
-        ["#2563eb", "#7c3aed", "#db2777", "#059669", "#d97706", "#0891b2"];
-
     public async ValueTask<AuthResult> Handle(RegisterCommand command, CancellationToken ct)
     {
         if (await db.Users.AnyAsync(u => u.Email == command.Email, ct))
@@ -49,7 +45,7 @@ public sealed class RegisterHandler(
             command.Name,
             command.Email,
             passwordHasher.Hash(command.Password),
-            AvatarPalette[userCount % AvatarPalette.Length]);
+            SessionIssuer.NextAvatarColor(userCount));
 
         db.Users.Add(user);
         db.UserPreferences.Add(UserPreferences.CreateDefault(user.Id));

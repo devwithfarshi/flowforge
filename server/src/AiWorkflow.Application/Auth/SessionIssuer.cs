@@ -11,6 +11,13 @@ namespace AiWorkflow.Application.Auth;
 /// </summary>
 internal static class SessionIssuer
 {
+    // Mirrors the frontend AVATAR palette (client/src/lib/api.ts).
+    private static readonly string[] AvatarPalette =
+        ["#2563eb", "#7c3aed", "#db2777", "#059669", "#d97706", "#0891b2"];
+
+    /// <summary>Deterministic avatar color assignment for new accounts, by registration order.</summary>
+    public static string NextAvatarColor(int userCount) => AvatarPalette[userCount % AvatarPalette.Length];
+
     public static (RefreshToken Entity, AuthResult Result) Issue(
         User user,
         Guid familyId,

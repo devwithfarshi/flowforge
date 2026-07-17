@@ -41,6 +41,9 @@ public sealed class ApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
         {
             services.RemoveAll<IEmailSender>();
             services.AddSingleton<IEmailSender>(Emails);
+
+            services.RemoveAll<IGoogleIdTokenValidator>();
+            services.AddSingleton<IGoogleIdTokenValidator, FakeGoogleIdTokenValidator>();
         });
     }
 
