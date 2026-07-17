@@ -7,6 +7,11 @@
  */
 import { seedDatabase } from "@/lib/db/seed";
 import { KEYS, read, write } from "@/lib/db/storage";
+// The real HTTP transport (blueprint §6). For now only its `ApiError` is used —
+// task 24 rewrites the method bodies below to call `http`. Sharing this one
+// `ApiError` class keeps the app's `err instanceof ApiError` checks working
+// whether a call hits the mock (today) or the real backend (after task 24).
+import { ApiError } from "@/lib/http";
 import { defaultConfig, getNodeDef } from "@/lib/nodes/catalog";
 import type {
   ActivityCategory,
@@ -47,7 +52,8 @@ function tx<T>(fn: () => T, fixed?: number): Promise<T> {
   });
 }
 
-export class ApiError extends Error {}
+// Re-exported so existing imports (`import { ApiError } from "@/lib/api"`) keep working.
+export { ApiError };
 
 function coll<T>(key: string): { all: () => T[]; set: (v: T[]) => void } {
   return { all: () => read<T[]>(key, []), set: (v: T[]) => write(key, v) };
