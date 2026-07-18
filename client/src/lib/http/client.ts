@@ -39,6 +39,12 @@ export interface ApiFetchOptions extends Omit<RequestInit, "body"> {
   auth?: boolean;
   /** Return the raw `Response` instead of a parsed body. Default `false`. */
   raw?: boolean;
+  /**
+   * Don't invoke the session-expired handler if a refresh fails — just throw the
+   * 401. Used by bootstrap (`GET /auth/me`) and `logout`, where "no valid
+   * session" is expected and must not trigger a redirect. Default `false`.
+   */
+  silentAuthFailure?: boolean;
 }
 
 /* ----------------------------------------------------------- session expiry */
@@ -92,7 +98,15 @@ function buildRequestInit(
   opts: ApiFetchOptions,
   token: string | null,
 ): RequestInit {
-  const { body, query: _q, auth: _a, raw: _r, headers, ...rest } = opts;
+  const {
+    body,
+    query: _q,
+    auth: _a,
+    raw: _r,
+    silentAuthFailure: _s,
+    headers,
+    ...rest
+  } = opts;
   const h = new Headers(headers);
   if (!h.has("Accept")) h.set("Accept", "application/json");
 
@@ -205,8 +219,9 @@ export async function apiFetch<T>(
           { status: 0 },
         );
       }
-    } else {
+    } else if (!opts.silentAuthFailure) {
       // Session is gone — let the app react (clear user, redirect to /login).
+      // Suppressed for bootstrap/logout, where a failed refresh is expected.
       sessionExpiredHandler?.();
     }
   }
