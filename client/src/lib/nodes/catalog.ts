@@ -43,16 +43,23 @@ const prompt: ConfigField = {
   placeholder: "You are a helpful assistant...",
   required: true,
 };
+const provider: ConfigField = {
+  key: "provider",
+  label: "Provider",
+  type: "select",
+  defaultValue: "anthropic",
+  options: [
+    { label: "Anthropic (Claude)", value: "anthropic" },
+    { label: "OpenAI (GPT)", value: "openai" },
+    { label: "Google (Gemini)", value: "gemini" },
+  ],
+};
 const model: ConfigField = {
   key: "model",
   label: "Model",
-  type: "select",
+  type: "text",
   defaultValue: "claude-opus-4-8",
-  options: [
-    { label: "Claude Opus 4.8", value: "claude-opus-4-8" },
-    { label: "Claude Sonnet 5", value: "claude-sonnet-5" },
-    { label: "Claude Haiku 4.5", value: "claude-haiku-4-5" },
-  ],
+  helper: "e.g. claude-opus-4-8, gpt-5, gemini-2.5-flash",
 };
 const temperature: ConfigField = {
   key: "temperature",
@@ -182,7 +189,7 @@ export const NODE_DEFINITIONS: NodeDefinition[] = [
     "Generate text with a large language model",
     1,
     1,
-    [model, prompt, temperature],
+    [provider, model, prompt, temperature],
   ),
   def(
     "ai.prompt",

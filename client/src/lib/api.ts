@@ -24,6 +24,8 @@ import { invalidate, KEYS } from "@/lib/db/storage";
 import { ApiError, clearAccessToken, http, setAccessToken } from "@/lib/http";
 import type {
   ActivityEntry,
+  AiProvider,
+  AiProviderInfo,
   ApiKey,
   Execution,
   Integration,
@@ -445,6 +447,27 @@ export const apiKeyApi = {
   },
 };
 
+/* =============================================================== AI PROVIDERS */
+export const aiProviderApi = {
+  async list(): Promise<AiProviderInfo[]> {
+    return http.get<AiProviderInfo[]>("/me/ai-providers");
+  },
+  async setKey(provider: AiProvider, apiKey: string): Promise<AiProviderInfo> {
+    const info = await http.put<AiProviderInfo>(
+      `/me/ai-providers/${provider}`,
+      {
+        apiKey,
+      },
+    );
+    invalidate(KEYS.aiProviders);
+    return info;
+  },
+  async remove(provider: AiProvider): Promise<void> {
+    await http.del<void>(`/me/ai-providers/${provider}`);
+    invalidate(KEYS.aiProviders);
+  },
+};
+
 /* =============================================================== SESSIONS */
 export const sessionApi = {
   async list(): Promise<LoginSession[]> {
@@ -509,6 +532,7 @@ export const api = {
   notifications: notificationApi,
   activity: activityApi,
   apiKeys: apiKeyApi,
+  aiProviders: aiProviderApi,
   sessions: sessionApi,
   settings: settingsApi,
   stats: statsApi,

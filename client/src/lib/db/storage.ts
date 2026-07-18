@@ -25,6 +25,7 @@ export const KEYS = {
   notifications: `${NS}.notifications`,
   activity: `${NS}.activity`,
   apiKeys: `${NS}.apiKeys`,
+  aiProviders: `${NS}.aiProviders`,
   preferences: `${NS}.preferences`,
   settings: `${NS}.settings`,
   favorites: `${NS}.favorites`,
