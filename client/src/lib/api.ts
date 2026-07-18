@@ -20,6 +20,7 @@
  *   • Live-updating views after a mutation returns in task 25 (SignalR +
  *     `useAsyncData` invalidation) — the LocalStorage pub/sub is gone.
  */
+import { invalidate, KEYS } from "@/lib/db/storage";
 import { ApiError, clearAccessToken, http, setAccessToken } from "@/lib/http";
 import type {
   ActivityEntry,
@@ -205,20 +206,27 @@ export const workflowApi = {
   },
 
   async create(partial: Partial<Workflow> = {}): Promise<Workflow> {
-    return http.post<Workflow>("/workflows", partial);
+    const wf = await http.post<Workflow>("/workflows", partial);
+    invalidate(KEYS.workflows, KEYS.activity);
+    return wf;
   },
 
   async update(id: string, patch: Partial<Workflow>): Promise<Workflow> {
-    return http.put<Workflow>(`/workflows/${id}`, patch);
+    const wf = await http.put<Workflow>(`/workflows/${id}`, patch);
+    invalidate(KEYS.workflows);
+    return wf;
   },
 
   async remove(ids: string | string[]): Promise<void> {
     const list = Array.isArray(ids) ? ids : [ids];
     await Promise.all(list.map((id) => http.del<void>(`/workflows/${id}`)));
+    invalidate(KEYS.workflows);
   },
 
   async duplicate(id: string): Promise<Workflow> {
-    return http.post<Workflow>(`/workflows/${id}/duplicate`);
+    const copy = await http.post<Workflow>(`/workflows/${id}/duplicate`);
+    invalidate(KEYS.workflows, KEYS.activity);
+    return copy;
   },
 
   async setArchived(ids: string | string[], archived: boolean): Promise<void> {
@@ -228,20 +236,34 @@ export const workflowApi = {
         http.post<Workflow>(`/workflows/${id}/archive`, { archived }),
       ),
     );
+    invalidate(KEYS.workflows);
   },
 
   async toggleFavorite(id: string): Promise<Workflow> {
-    return http.post<Workflow>(`/workflows/${id}/favorite`);
+    const wf = await http.post<Workflow>(`/workflows/${id}/favorite`);
+    invalidate(KEYS.workflows);
+    return wf;
   },
 
   async setStatus(id: string, status: Workflow["status"]): Promise<Workflow> {
-    return http.patch<Workflow>(`/workflows/${id}/status`, { status });
+    const wf = await http.patch<Workflow>(`/workflows/${id}/status`, {
+      status,
+    });
+    invalidate(KEYS.workflows);
+    return wf;
   },
 
   /** Enqueue a run; the returned execution starts `queued`/`running` and its
-   *  progress streams over SignalR (wired in task 25). */
+   *  progress streams over SignalR (see `@/lib/realtime/execution-hub`). */
   async run(id: string): Promise<Execution> {
-    return http.post<Execution>(`/workflows/${id}/run`);
+    const exec = await http.post<Execution>(`/workflows/${id}/run`);
+    invalidate(
+      KEYS.workflows,
+      KEYS.executions,
+      KEYS.notifications,
+      KEYS.activity,
+    );
+    return exec;
   },
 };
 
@@ -287,7 +309,9 @@ export const templateApi = {
     return http.get<Template>(`/templates/${id}`);
   },
   async install(id: string): Promise<Workflow> {
-    return http.post<Workflow>(`/templates/${id}/install`);
+    const wf = await http.post<Workflow>(`/templates/${id}/install`);
+    invalidate(KEYS.workflows, KEYS.activity);
+    return wf;
   },
 };
 
@@ -297,11 +321,20 @@ export const integrationApi = {
     return http.get<Integration[]>("/integrations");
   },
   async connect(id: string, label: string): Promise<Integration> {
-    return http.post<Integration>(`/integrations/${id}/connect`, { label });
+    const integration = await http.post<Integration>(
+      `/integrations/${id}/connect`,
+      { label },
+    );
+    invalidate(KEYS.integrations, KEYS.notifications, KEYS.activity);
+    return integration;
   },
   async disconnect(id: string, accountId?: string): Promise<Integration> {
     if (accountId) {
-      return http.del<Integration>(`/integrations/${id}/accounts/${accountId}`);
+      const integration = await http.del<Integration>(
+        `/integrations/${id}/accounts/${accountId}`,
+      );
+      invalidate(KEYS.integrations);
+      return integration;
     }
     // No account specified → disconnect every account (mock parity). The backend
     // only removes one account per call, so fetch the list and remove each.
@@ -314,6 +347,7 @@ export const integrationApi = {
         `/integrations/${id}/accounts/${acc.id}`,
       );
     }
+    invalidate(KEYS.integrations);
     return result;
   },
 };
@@ -328,13 +362,18 @@ export const variableApi = {
     });
   },
   async create(v: Omit<Variable, "id" | "updatedAt">): Promise<Variable> {
-    return http.post<Variable>("/variables", v);
+    const variable = await http.post<Variable>("/variables", v);
+    invalidate(KEYS.variables, KEYS.activity);
+    return variable;
   },
   async update(id: string, patch: Partial<Variable>): Promise<Variable> {
-    return http.put<Variable>(`/variables/${id}`, patch);
+    const variable = await http.put<Variable>(`/variables/${id}`, patch);
+    invalidate(KEYS.variables);
+    return variable;
   },
   async remove(id: string): Promise<void> {
     await http.del<void>(`/variables/${id}`);
+    invalidate(KEYS.variables);
   },
 };
 
@@ -351,16 +390,22 @@ export const notificationApi = {
   async markRead(id: string, read = true): Promise<void> {
     // The backend exposes only "mark read" — there is no "mark unread" endpoint,
     // so a `read: false` toggle is a client-side no-op.
-    if (read) await http.post<void>(`/notifications/${id}/read`);
+    if (read) {
+      await http.post<void>(`/notifications/${id}/read`);
+      invalidate(KEYS.notifications);
+    }
   },
   async markAllRead(): Promise<void> {
     await http.post<void>("/notifications/read-all");
+    invalidate(KEYS.notifications);
   },
   async setArchived(id: string, archived: boolean): Promise<void> {
     await http.post<void>(`/notifications/${id}/archive`, { archived });
+    invalidate(KEYS.notifications);
   },
   async remove(id: string): Promise<void> {
     await http.del<void>(`/notifications/${id}`);
+    invalidate(KEYS.notifications);
   },
 };
 
@@ -387,13 +432,16 @@ export const apiKeyApi = {
     name: string,
     scopes: string[],
   ): Promise<{ key: ApiKey; secret: string }> {
-    return http.post<{ key: ApiKey; secret: string }>("/api-keys", {
-      name,
-      scopes,
-    });
+    const created = await http.post<{ key: ApiKey; secret: string }>(
+      "/api-keys",
+      { name, scopes },
+    );
+    invalidate(KEYS.apiKeys);
+    return created;
   },
   async revoke(id: string): Promise<void> {
     await http.del<void>(`/api-keys/${id}`);
+    invalidate(KEYS.apiKeys);
   },
 };
 
@@ -404,9 +452,11 @@ export const sessionApi = {
   },
   async revoke(id: string): Promise<void> {
     await http.del<void>(`/sessions/${id}`);
+    invalidate(KEYS.loginSessions);
   },
   async revokeOthers(): Promise<void> {
     await http.del<void>("/sessions/others");
+    invalidate(KEYS.loginSessions);
   },
 };
 
@@ -416,13 +466,17 @@ export const settingsApi = {
     return http.get<Preferences>("/me/preferences");
   },
   async updatePreferences(patch: Partial<Preferences>): Promise<Preferences> {
-    return http.patch<Preferences>("/me/preferences", patch);
+    const prefs = await http.patch<Preferences>("/me/preferences", patch);
+    invalidate(KEYS.preferences);
+    return prefs;
   },
   async getSettings(): Promise<Settings> {
     return http.get<Settings>("/me/settings");
   },
   async updateSettings(patch: Partial<Settings>): Promise<Settings> {
-    return http.patch<Settings>("/me/settings", patch);
+    const settings = await http.patch<Settings>("/me/settings", patch);
+    invalidate(KEYS.settings);
+    return settings;
   },
 };
 

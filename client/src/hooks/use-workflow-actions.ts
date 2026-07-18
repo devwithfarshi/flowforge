@@ -39,10 +39,11 @@ export function useWorkflowActions() {
 
   const run = useCallback(
     async (id: string) => {
-      toast.info("Execution started");
+      // Runs are asynchronous: the backend queues the execution and streams
+      // progress (live in the builder console). The outcome shows up in the
+      // executions list rather than in this call's result.
       const exec = await api.workflows.run(id);
-      if (exec.status === "success") toast.success("Execution completed");
-      else toast.error("Execution failed", "One or more nodes failed.");
+      toast.success("Execution started", "Track progress in Executions.");
       return exec;
     },
     [toast],

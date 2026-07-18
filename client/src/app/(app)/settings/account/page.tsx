@@ -4,30 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Icon } from "@/components/ui/icon";
-import { seedDatabase } from "@/lib/db/seed";
 import { useAuth } from "@/providers/auth-provider";
 import { useConfirm } from "@/providers/confirm-provider";
-import { useToast } from "@/providers/toast-provider";
 
 export default function AccountSettingsPage() {
   const { user, logout } = useAuth();
   const confirm = useConfirm();
-  const toast = useToast();
-
-  const resetData = async () => {
-    const ok = await confirm({
-      title: "Reset workspace data?",
-      description:
-        "This restores all demo workflows, executions, and settings to their original seeded state.",
-      confirmText: "Reset data",
-      tone: "danger",
-      icon: "refresh-cw",
-    });
-    if (!ok) return;
-    seedDatabase(true);
-    toast.success("Workspace data reset");
-    setTimeout(() => window.location.reload(), 600);
-  };
 
   const deleteAccount = async () => {
     const ok = await confirm({
@@ -119,24 +101,6 @@ export default function AccountSettingsPage() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-[13.5px] font-medium text-foreground">
-                Reset workspace data
-              </p>
-              <p className="text-[13px] text-muted-foreground">
-                Restore the demo dataset to its original state.
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              leftIcon="refresh-cw"
-              onClick={resetData}
-            >
-              Reset
-            </Button>
-          </div>
-          <div className="flex items-center justify-between gap-4 border-t border-border pt-3">
             <div>
               <p className="text-[13.5px] font-medium text-foreground">
                 Delete account

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useBuilderState } from "@/hooks/use-builder-state";
-import { api } from "@/lib/api";
+import { ApiError, api } from "@/lib/api";
 import {
   bezierPath,
   graphBounds,
@@ -17,7 +17,8 @@ import {
   type Viewport,
 } from "@/lib/builder/geometry";
 import { getNodeDef } from "@/lib/nodes/catalog";
-import type { LogEntry, Workflow, WorkflowNode } from "@/lib/types";
+import { subscribeToExecution } from "@/lib/realtime/execution-hub";
+import type { Execution, LogEntry, Workflow, WorkflowNode } from "@/lib/types";
 import { clamp, download, uid } from "@/lib/utils";
 import { useToast } from "@/providers/toast-provider";
 import { CanvasNode } from "./canvas-node";
@@ -82,6 +83,8 @@ export function BuilderWorkspace({ workflow }: { workflow: Workflow }) {
   const spaceRef = useRef(false);
   const saveRef = useRef<(silent?: boolean) => Promise<void>>(async () => {});
   const firstRender = useRef(true);
+  // Detaches the current execution's live SignalR stream (set while a run streams).
+  const runCleanupRef = useRef<(() => void) | null>(null);
 
   const rect = () =>
     canvasRef.current?.getBoundingClientRect() ?? new DOMRect();
@@ -396,39 +399,95 @@ export function BuilderWorkspace({ workflow }: { workflow: Workflow }) {
     actions.addNode(type, { x: snap(w.x - NODE_W / 2), y: snap(w.y - 30) });
   };
 
-  /* --------------------------------------------------- run simulation */
+  /* --------------------------------------------------- run (live SignalR stream) */
+  // Tear down the live stream if the builder unmounts mid-run.
+  useEffect(() => () => runCleanupRef.current?.(), []);
+
   const runWorkflow = async () => {
     if (running) return;
     await save(true);
+    // Drop any previous run's stream before starting a new one.
+    runCleanupRef.current?.();
+    runCleanupRef.current = null;
     setRunning(true);
     setRunStatus("running");
     setLogs([]);
     setRunDuration(null);
     setNodeRunStatus({});
     setConsoleOpen(true);
-    const exec = await api.workflows.run(workflow.id);
-    const byNode = new Map<string, LogEntry[]>();
-    exec.logs.forEach((l) => {
-      if (!l.nodeId) return;
-      if (!byNode.has(l.nodeId)) byNode.set(l.nodeId, []);
-      byNode.get(l.nodeId)!.push(l);
-    });
-    for (const nr of exec.nodeRuns) {
-      setNodeRunStatus((s) => ({ ...s, [nr.nodeId]: "running" }));
-      await new Promise((r) => setTimeout(r, 260));
-      const nodeLogs = byNode.get(nr.nodeId) ?? [];
-      setLogs((prev) => [...prev, ...nodeLogs]);
-      setNodeRunStatus((s) => ({
-        ...s,
-        [nr.nodeId]: nr.status === "failed" ? "error" : "success",
-      }));
-      if (nr.status === "failed") break;
+    const startedAt = Date.now();
+
+    // Enqueue the run; the backend streams progress over /hubs/executions.
+    let exec: Execution;
+    try {
+      exec = await api.workflows.run(workflow.id);
+    } catch (err) {
+      setRunning(false);
+      setRunStatus("failed");
+      toast.error(
+        "Couldn't start run",
+        err instanceof ApiError ? err.message : "Please try again.",
+      );
+      return;
     }
-    setRunStatus(exec.status === "success" ? "success" : "failed");
-    setRunDuration(exec.durationMs);
-    setRunning(false);
-    if (exec.status === "success") toast.success("Execution completed");
-    else toast.error("Execution failed", "A node returned an error.");
+
+    let settled = false;
+    const finish = async (status: "success" | "failed") => {
+      if (settled) return;
+      settled = true;
+      runCleanupRef.current?.();
+      runCleanupRef.current = null;
+      // Reconcile against the authoritative record so the console is complete
+      // even if some early stream messages were missed.
+      try {
+        const full = await api.executions.get(exec.id);
+        setLogs(full.logs);
+        setRunDuration(full.durationMs ?? Date.now() - startedAt);
+        setNodeRunStatus(
+          Object.fromEntries(
+            full.nodeRuns.map((nr) => [
+              nr.nodeId,
+              nr.status === "failed" ? "error" : "success",
+            ]),
+          ),
+        );
+      } catch {
+        setRunDuration(Date.now() - startedAt);
+      }
+      setRunStatus(status);
+      setRunning(false);
+      if (status === "success") toast.success("Execution completed");
+      else toast.error("Execution failed", "A node returned an error.");
+    };
+
+    runCleanupRef.current = await subscribeToExecution(exec.id, {
+      onLog: (entry) => {
+        setLogs((prev) => [...prev, entry]);
+        const nid = entry.nodeId;
+        if (nid) {
+          setNodeRunStatus((s) =>
+            s[nid] === "success" || s[nid] === "error"
+              ? s
+              : { ...s, [nid]: "running" },
+          );
+        }
+      },
+      onNodeRun: (run) => {
+        setNodeRunStatus((s) => ({
+          ...s,
+          [run.nodeId]:
+            run.status === "failed"
+              ? "error"
+              : run.status === "success"
+                ? "success"
+                : "running",
+        }));
+      },
+      onStatus: (status) => {
+        if (status === "success" || status === "failed") void finish(status);
+        else setRunStatus("running");
+      },
+    });
   };
 
   /* --------------------------------------------------- toolbar actions */

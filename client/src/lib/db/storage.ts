@@ -1,6 +1,14 @@
 /**
- * LocalStorage-backed persistence with SSR safety + a tiny pub/sub so that
- * components can react to data changes across the app.
+ * Client-side reactivity bus + light LocalStorage persistence (SSR-safe).
+ *
+ * The mock data store this used to back is retired (data now lives on the real
+ * backend). Two things remain:
+ *  - **`KEYS` + pub/sub**: `KEYS` are stable resource identifiers that
+ *    `useAsyncData(..., watchKeys)` subscribes to. `api.ts` calls `invalidate()`
+ *    after a mutation to nudge every subscribed view to refetch — the same live
+ *    behaviour the mock got from `write()`, now driven by server writes.
+ *  - **`read`/`write`**: still used for genuinely client-local prefs (e.g. the
+ *    theme, for flash-free first paint).
  */
 
 export const NS = "ff";
@@ -71,6 +79,15 @@ export function subscribe(key: string, listener: Listener): () => void {
   const set = listeners.get(key)!;
   set.add(listener);
   return () => set.delete(listener);
+}
+
+/**
+ * Notify every `useAsyncData` watching one of these resource keys to refetch.
+ * Called by `api.ts` after a successful mutation (create/update/delete/…), so
+ * views stay live without writing to LocalStorage.
+ */
+export function invalidate(...keys: string[]): void {
+  for (const key of keys) emit(key);
 }
 
 /** Cross-tab sync — reflect changes made in other browser tabs. */

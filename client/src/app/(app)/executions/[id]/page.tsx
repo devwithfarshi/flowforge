@@ -77,10 +77,10 @@ export default function ExecutionDetailPage() {
   const errorCount = exec.logs.filter((l) => l.level === "error").length;
 
   const rerun = async () => {
-    toast.info("Re-running workflow");
-    const e = await api.workflows.run(exec.workflowId);
-    if (e.status === "success") toast.success("Re-run completed");
-    else toast.error("Re-run failed");
+    await api.workflows.run(exec.workflowId);
+    // Async run: the new execution is queued and streams progress. It appears
+    // in the executions list; this page keeps showing the record you opened.
+    toast.success("Re-run started", "Track progress in Executions.");
   };
 
   return (
