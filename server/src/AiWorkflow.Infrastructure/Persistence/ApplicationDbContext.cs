@@ -43,6 +43,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
 
+    public DbSet<AiProviderCredential> AiProviderCredentials => Set<AiProviderCredential>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresExtension("citext");

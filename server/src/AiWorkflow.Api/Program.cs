@@ -60,6 +60,7 @@ app.MapAuthEndpoints();
 app.MapUserEndpoints();
 app.MapSessionEndpoints();
 app.MapMeEndpoints();
+app.MapAiProviderEndpoints();
 app.MapWorkflowEndpoints();
 app.MapExecutionEndpoints();
 app.MapTemplateEndpoints();

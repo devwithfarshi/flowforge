@@ -39,6 +39,8 @@ public interface IApplicationDbContext
 
     DbSet<ApiKey> ApiKeys { get; }
 
+    DbSet<AiProviderCredential> AiProviderCredentials { get; }
+
     DbSet<TEntity> Set<TEntity>()
         where TEntity : class;
 

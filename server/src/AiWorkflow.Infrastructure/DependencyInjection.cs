@@ -3,6 +3,7 @@ using AiWorkflow.Infrastructure.Caching;
 using AiWorkflow.Infrastructure.Email;
 using AiWorkflow.Infrastructure.Executions;
 using AiWorkflow.Infrastructure.Executions.Executors;
+using AiWorkflow.Infrastructure.Executions.Llm;
 using AiWorkflow.Infrastructure.Identity;
 using AiWorkflow.Infrastructure.Jobs;
 using AiWorkflow.Infrastructure.Persistence;
@@ -109,6 +110,11 @@ public static class DependencyInjection
         services.AddSingleton<IJobScheduler, HangfireJobScheduler>();
         services.AddSingleton<SimulatedNodeExecutor>();
         services.AddSingleton<INodeExecutor, ManualTriggerExecutor>();
+        // Real LLM providers (BYOK) + the ai.llm executor that calls them (§12).
+        services.AddSingleton<ILlmProvider, OpenAiProvider>();
+        services.AddSingleton<ILlmProvider, GeminiProvider>();
+        services.AddSingleton<ILlmProvider, AnthropicProvider>();
+        services.AddSingleton<INodeExecutor, LlmNodeExecutor>();
         services.AddSingleton<NodeExecutorRegistry>();
         services.AddScoped<IExecutionEngine, WorkflowExecutionEngine>();
 

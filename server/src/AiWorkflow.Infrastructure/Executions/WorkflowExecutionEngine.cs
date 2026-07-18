@@ -79,7 +79,7 @@ public sealed class WorkflowExecutionEngine(
                         .ToDictionary(e => e.Source, e => outputs.GetValueOrDefault(e.Source));
 
                     var result = await registry.Resolve(node.Type)
-                        .ExecuteAsync(new NodeContext(node, upstream, workflow.Variables), timeout.Token);
+                        .ExecuteAsync(new NodeContext(node, upstream, workflow.Variables, workflow.OwnerId), timeout.Token);
                     outputs[node.Id] = result.Output;
 
                     var duration = DurationMs(startedAt);
