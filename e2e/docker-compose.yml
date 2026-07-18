@@ -1,0 +1,29 @@
+# Full-stack E2E stack (P8 · task 26).
+#
+# Builds the API from source and keeps Postgres/Redis on the internal network
+# only (host 5432/6379 are frequently already in use). The API is published on
+# 8080 for the client and the smoke scripts.
+#
+#   docker compose -f e2e/docker-compose.yml up --build -d
+#   # client → set NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1
+#
+# Tear down with:  docker compose -f e2e/docker-compose.yml down -v
+services:
+  api:
+    build: { context: ../server, dockerfile: docker/Dockerfile }
+    ports: ["8080:8080"]
+    environment:
+      - ConnectionStrings__Postgres=Host=postgres;Database=flowforge;Username=flow;Password=flow
+      - Redis__ConnectionString=redis:6379
+      - Jwt__SigningKey=flowforge-local-e2e-signing-key-not-for-production!
+      - Google__ClientId=flowforge-local-e2e.apps.googleusercontent.com
+      - Database__MigrateOnStartup=true
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_started }
+  postgres:
+    image: postgres:16
+    environment: { POSTGRES_DB: flowforge, POSTGRES_USER: flow, POSTGRES_PASSWORD: flow }
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U flow"], interval: 5s, retries: 10 }
+  redis:
+    image: redis:7-alpine
