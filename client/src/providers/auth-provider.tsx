@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import { api, ensureSeeded } from "@/lib/api";
+import { setSessionExpiredHandler } from "@/lib/http";
 import type { PublicUser } from "@/lib/types";
 
 interface AuthContextValue {
@@ -50,6 +51,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then(setUser)
       .finally(() => setLoading(false));
   }, []);
+
+  // When a token refresh fails mid-session (@/lib/http), drop the user and send
+  // them to sign in. Returns the unsubscribe so the handler is swapped cleanly.
+  useEffect(
+    () =>
+      setSessionExpiredHandler(() => {
+        setUser(null);
+        router.push("/login");
+      }),
+    [router],
+  );
 
   const login = useCallback(
     async (email: string, password: string, rememberMe?: boolean) => {

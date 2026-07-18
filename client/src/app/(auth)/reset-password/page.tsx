@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/input";
-import { api } from "@/lib/api";
+import { ApiError, api } from "@/lib/api";
 import { validators } from "@/lib/utils";
 import { useToast } from "@/providers/toast-provider";
 
@@ -13,6 +13,9 @@ function ResetForm() {
   const params = useSearchParams();
   const router = useRouter();
   const toast = useToast();
+  // The single-use token comes from the emailed link (?token=…); email is only
+  // for display when present.
+  const token = params.get("token") ?? "";
   const email = params.get("email") ?? "";
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -28,10 +31,20 @@ function ResetForm() {
     setErrors(next);
     if (next.password || next.confirm) return;
     setSubmitting(true);
-    await api.auth.resetPassword(email, password);
-    setSubmitting(false);
-    toast.success("Password updated", "Sign in with your new password.");
-    router.replace("/login");
+    try {
+      await api.auth.resetPassword(token, password);
+      toast.success("Password updated", "Sign in with your new password.");
+      router.replace("/login");
+    } catch (err) {
+      toast.error(
+        "Couldn't reset password",
+        err instanceof ApiError
+          ? err.message
+          : "The reset link may have expired — request a new one.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
