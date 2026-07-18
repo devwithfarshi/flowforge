@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   Dropdown,
   DropdownItem,
@@ -33,6 +34,10 @@ export function Topbar({ onOpenMobileNav }: { onOpenMobileNav: () => void }) {
       >
         <Icon name="menu" size={20} />
       </button>
+
+      <Badge tone="purple" className="shrink-0 lg:hidden">
+        Demo Mode
+      </Badge>
 
       <div className="hidden min-w-0 flex-1 md:block">
         <Breadcrumbs />

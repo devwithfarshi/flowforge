@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { Logo, LogoMark } from "@/components/brand/logo";
+import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/skeleton";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -60,18 +61,31 @@ export function Sidebar({
         )}
       >
         {collapsed ? (
-          <Link href="/dashboard" onClick={onNavigate} aria-label="Flowforge">
-            <LogoMark size={28} />
-          </Link>
+          <Tooltip content="Demo Mode" side="bottom">
+            <Link
+              href="/dashboard"
+              onClick={onNavigate}
+              aria-label="Flowforge (Demo Mode)"
+              className="relative"
+            >
+              <LogoMark size={28} />
+              <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-primary ring-2 ring-sidebar" />
+            </Link>
+          </Tooltip>
         ) : (
           <>
-            <Link href="/dashboard" onClick={onNavigate}>
-              <Logo size={26} />
-            </Link>
+            <div className="flex min-w-0 items-center gap-2">
+              <Link href="/dashboard" onClick={onNavigate} className="shrink-0">
+                <Logo size={26} />
+              </Link>
+              <Badge tone="purple" className="shrink-0">
+                Demo Mode
+              </Badge>
+            </div>
             <button
               type="button"
               onClick={onToggleCollapse}
-              className="hidden rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground lg:block"
+              className="hidden shrink-0 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground lg:block"
               aria-label="Collapse sidebar"
             >
               <Icon name="chevrons-left" size={18} />
