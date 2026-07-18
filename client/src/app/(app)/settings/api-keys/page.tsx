@@ -81,9 +81,16 @@ export default function ApiKeysPage() {
             Programmatic access to the Flowforge API.
           </p>
         </div>
-        <Button size="sm" leftIcon="plus" onClick={() => setCreating(true)}>
-          Create key
-        </Button>
+        <div className="flex items-center gap-2">
+          <a href="/api-docs" target="_blank" rel="noreferrer">
+            <Button size="sm" variant="outline" leftIcon="file-text">
+              API reference
+            </Button>
+          </a>
+          <Button size="sm" leftIcon="plus" onClick={() => setCreating(true)}>
+            Create key
+          </Button>
+        </div>
       </CardHeader>
 
       {loading && !keys ? (

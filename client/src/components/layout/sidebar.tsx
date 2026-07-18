@@ -151,12 +151,22 @@ export function Sidebar({
       {/* Footer */}
       <div
         className={cn(
-          "border-t border-sidebar-border p-3",
+          "space-y-1 border-t border-sidebar-border p-3",
           collapsed && "px-2",
         )}
       >
         {collapsed ? (
           <div className="flex flex-col items-center gap-1">
+            <Tooltip content="API docs" side="bottom">
+              <a
+                href="/api-docs"
+                target="_blank"
+                rel="noreferrer"
+                className="flex h-9 w-9 items-center justify-center rounded-md text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+              >
+                <Icon name="file-text" size={18} />
+              </a>
+            </Tooltip>
             <Tooltip content="Settings" side="bottom">
               <Link
                 href="/settings/profile"
@@ -178,19 +188,35 @@ export function Sidebar({
             </Tooltip>
           </div>
         ) : (
-          <Link
-            href="/settings/profile"
-            onClick={onNavigate}
-            className={cn(
-              "flex items-center gap-3 rounded-md px-2.5 py-2 text-[13.5px] font-medium transition-colors",
-              pathname.startsWith("/settings")
-                ? "bg-sidebar-active text-sidebar-active-foreground"
-                : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-            )}
-          >
-            <Icon name="settings" size={18} />
-            Settings
-          </Link>
+          <>
+            <a
+              href="/api-docs"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-3 rounded-md px-2.5 py-2 text-[13.5px] font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+            >
+              <Icon name="file-text" size={18} />
+              API docs
+              <Icon
+                name="external-link"
+                size={14}
+                className="ml-auto text-muted-foreground/60"
+              />
+            </a>
+            <Link
+              href="/settings/profile"
+              onClick={onNavigate}
+              className={cn(
+                "flex items-center gap-3 rounded-md px-2.5 py-2 text-[13.5px] font-medium transition-colors",
+                pathname.startsWith("/settings")
+                  ? "bg-sidebar-active text-sidebar-active-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              )}
+            >
+              <Icon name="settings" size={18} />
+              Settings
+            </Link>
+          </>
         )}
       </div>
     </aside>
