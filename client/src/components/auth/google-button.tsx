@@ -1,7 +1,48 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { Spinner } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+
+// Real Google OAuth Web client id, inlined at build time (must be referenced
+// literally so Next.js inlines it — see the env-variables guide).
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+const GIS_SRC = "https://accounts.google.com/gsi/client";
+
+type GoogleId = {
+  accounts: {
+    id: {
+      initialize: (c: {
+        client_id: string;
+        callback: (r: { credential?: string }) => void;
+      }) => void;
+      renderButton: (el: HTMLElement, o: Record<string, unknown>) => void;
+    };
+  };
+};
+
+const getGoogle = (): GoogleId | undefined =>
+  (window as unknown as { google?: GoogleId }).google;
+
+// Load the Google Identity Services script once, shared across button instances.
+let gisPromise: Promise<GoogleId | null> | null = null;
+function loadGis(): Promise<GoogleId | null> {
+  if (typeof window === "undefined") return Promise.resolve(null);
+  const existing = getGoogle();
+  if (existing?.accounts?.id) return Promise.resolve(existing);
+  if (!gisPromise) {
+    gisPromise = new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = GIS_SRC;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => resolve(getGoogle() ?? null);
+      script.onerror = () => resolve(null);
+      document.head.appendChild(script);
+    });
+  }
+  return gisPromise;
+}
 
 function GoogleGlyph() {
   return (
@@ -28,35 +69,98 @@ function GoogleGlyph() {
 
 interface GoogleAuthButtonProps {
   label?: string;
-  onClick: () => void;
+  /** Called with the Google ID token (JWT) once the user completes sign-in. */
+  onCredential: (idToken: string) => void;
   loading?: boolean;
   disabled?: boolean;
   className?: string;
 }
 
+/**
+ * Google sign-in button (blueprint §4.5). Renders the app's styled button and
+ * overlays a real, transparent Google Identity Services button on top so clicks
+ * trigger Google's flow (which yields an ID token) while the custom look is kept.
+ * The ID token is handed to `onCredential`, which posts it to `/auth/google`.
+ */
 export function GoogleAuthButton({
   label = "Continue with Google",
-  onClick,
+  onCredential,
   loading,
   disabled,
   className,
 }: GoogleAuthButtonProps) {
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const onCredentialRef = useRef(onCredential);
+  onCredentialRef.current = onCredential;
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) {
+      setFailed(true);
+      return;
+    }
+    let cancelled = false;
+    loadGis().then((google) => {
+      if (cancelled) return;
+      const el = overlayRef.current;
+      if (!google || !el) {
+        setFailed(true);
+        return;
+      }
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: (res) => {
+          if (res.credential) onCredentialRef.current(res.credential);
+        },
+      });
+      const width = Math.min(
+        400,
+        Math.max(200, Math.floor(el.getBoundingClientRect().width) || 320),
+      );
+      el.replaceChildren();
+      google.accounts.id.renderButton(el, {
+        type: "standard",
+        theme: "outline",
+        size: "large",
+        text: "continue_with",
+        shape: "rectangular",
+        logo_alignment: "left",
+        width,
+      });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const inert = loading || disabled || failed || !GOOGLE_CLIENT_ID;
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={loading || disabled}
-      className={cn(
-        "flex h-10 w-full items-center justify-center gap-2.5 rounded-lg border border-border bg-card text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-60",
-        className,
-      )}
-    >
-      {loading ? (
-        <Spinner size={18} className="text-muted-foreground" />
-      ) : (
-        <GoogleGlyph />
-      )}
-      {label}
-    </button>
+    <div className={cn("group relative", className)}>
+      {/* Visual only — the styled button the app design calls for. */}
+      <div
+        className={cn(
+          "flex h-10 w-full items-center justify-center gap-2.5 rounded-lg border border-border bg-card text-sm font-medium text-foreground transition-colors",
+          !inert && "group-hover:bg-accent",
+          disabled && "opacity-60",
+        )}
+      >
+        {loading ? (
+          <Spinner size={18} className="text-muted-foreground" />
+        ) : (
+          <GoogleGlyph />
+        )}
+        {label}
+      </div>
+      {/* Real Google button, transparent + overlaid so it receives the clicks.
+          opacity-0 elements stay interactive; disabled while a request is in flight. */}
+      <div
+        ref={overlayRef}
+        className={cn(
+          "absolute inset-0 overflow-hidden opacity-0",
+          inert && "pointer-events-none",
+        )}
+      />
+    </div>
   );
 }

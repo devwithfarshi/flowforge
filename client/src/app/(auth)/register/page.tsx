@@ -60,14 +60,17 @@ export default function RegisterPage() {
     }
   };
 
-  const handleGoogle = async () => {
+  const handleGoogle = async (idToken: string) => {
     setGoogleLoading(true);
     try {
-      const u = await loginWithGoogle();
+      const u = await loginWithGoogle(idToken);
       toast.success(`Welcome, ${u.name.split(" ")[0]}`);
       router.replace("/dashboard");
-    } catch {
-      toast.error("Google sign-up failed", "Please try again.");
+    } catch (err) {
+      toast.error(
+        "Google sign-up failed",
+        err instanceof ApiError ? err.message : "Please try again.",
+      );
     } finally {
       setGoogleLoading(false);
     }
@@ -86,7 +89,7 @@ export default function RegisterPage() {
 
       <GoogleAuthButton
         label="Sign up with Google"
-        onClick={handleGoogle}
+        onCredential={handleGoogle}
         loading={googleLoading}
         disabled={submitting}
       />

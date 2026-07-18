@@ -48,14 +48,17 @@ export default function LoginPage() {
     }
   };
 
-  const handleGoogle = async () => {
+  const handleGoogle = async (idToken: string) => {
     setGoogleLoading(true);
     try {
-      const u = await loginWithGoogle();
+      const u = await loginWithGoogle(idToken);
       toast.success(`Welcome, ${u.name.split(" ")[0]}`);
       router.replace("/dashboard");
-    } catch {
-      toast.error("Google sign-in failed", "Please try again.");
+    } catch (err) {
+      toast.error(
+        "Google sign-in failed",
+        err instanceof ApiError ? err.message : "Please try again.",
+      );
     } finally {
       setGoogleLoading(false);
     }
@@ -73,7 +76,7 @@ export default function LoginPage() {
       </div>
 
       <GoogleAuthButton
-        onClick={handleGoogle}
+        onCredential={handleGoogle}
         loading={googleLoading}
         disabled={submitting}
       />
