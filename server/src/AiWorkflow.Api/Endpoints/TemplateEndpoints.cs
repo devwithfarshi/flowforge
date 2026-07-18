@@ -13,10 +13,10 @@ public static class TemplateEndpoints
             .RequireAuthorization();
 
         group.MapGet("/", async (string? search, string? category, string? sort, IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new ListTemplatesQuery(search, category, sort), ct)));
+            TypedResults.Ok(await mediator.Send(new ListTemplatesQuery(search, category, sort), ct)));
 
         group.MapGet("/{id:guid}", async (Guid id, IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new GetTemplateQuery(id), ct)));
+            TypedResults.Ok(await mediator.Send(new GetTemplateQuery(id), ct)));
 
         group.MapPost("/{id:guid}/install", async (Guid id, IMediator mediator, CancellationToken ct) =>
         {

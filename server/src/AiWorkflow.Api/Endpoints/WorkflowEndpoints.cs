@@ -45,11 +45,11 @@ public static class WorkflowEndpoints
             bool? includeArchived,
             IMediator mediator,
             CancellationToken ct) =>
-            Results.Ok(await mediator.Send(
+            TypedResults.Ok(await mediator.Send(
                 new ListWorkflowsQuery(search, status, trigger, tag, sort, page, pageSize, includeArchived ?? false), ct)));
 
         read.MapGet("/{id:guid}", async (Guid id, IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new GetWorkflowQuery(id), ct)));
+            TypedResults.Ok(await mediator.Send(new GetWorkflowQuery(id), ct)));
 
         group.MapPost("/", async (WorkflowRequest request, IMediator mediator, CancellationToken ct) =>
         {
@@ -62,7 +62,7 @@ public static class WorkflowEndpoints
         });
 
         group.MapPut("/{id:guid}", async (Guid id, WorkflowRequest request, IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(
+            TypedResults.Ok(await mediator.Send(
                 new UpdateWorkflowCommand(
                     id, request.Name, request.Description, request.Tags, request.Status,
                     request.TriggerType, request.Nodes, request.Edges, request.Variables),
@@ -81,13 +81,13 @@ public static class WorkflowEndpoints
         });
 
         group.MapPost("/{id:guid}/archive", async (Guid id, SetArchivedRequest request, IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new SetWorkflowArchivedCommand(id, request.Archived), ct)));
+            TypedResults.Ok(await mediator.Send(new SetWorkflowArchivedCommand(id, request.Archived), ct)));
 
         group.MapPost("/{id:guid}/favorite", async (Guid id, IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new ToggleWorkflowFavoriteCommand(id), ct)));
+            TypedResults.Ok(await mediator.Send(new ToggleWorkflowFavoriteCommand(id), ct)));
 
         group.MapPatch("/{id:guid}/status", async (Guid id, SetStatusRequest request, IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new SetWorkflowStatusCommand(id, request.Status), ct)));
+            TypedResults.Ok(await mediator.Send(new SetWorkflowStatusCommand(id, request.Status), ct)));
 
         // §14.2: enqueue + return the queued execution; progress streams over SignalR.
         group.MapPost("/{id:guid}/run", async (Guid id, IMediator mediator, CancellationToken ct) =>

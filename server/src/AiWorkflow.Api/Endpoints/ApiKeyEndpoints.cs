@@ -15,7 +15,7 @@ public static class ApiKeyEndpoints
             .RequireAuthorization();
 
         group.MapGet("/", async (IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new ListApiKeysQuery(), ct)));
+            TypedResults.Ok(await mediator.Send(new ListApiKeysQuery(), ct)));
 
         group.MapPost("/", async (CreateApiKeyRequest request, IMediator mediator, CancellationToken ct) =>
         {

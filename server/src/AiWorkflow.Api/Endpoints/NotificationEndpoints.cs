@@ -16,10 +16,10 @@ public static class NotificationEndpoints
             .RequireAuthorization();
 
         group.MapGet("/", async (string? filter, IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new ListNotificationsQuery(filter), ct)));
+            TypedResults.Ok(await mediator.Send(new ListNotificationsQuery(filter), ct)));
 
         group.MapGet("/unread-count", async (IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new UnreadCountQuery(), ct)));
+            TypedResults.Ok(await mediator.Send(new UnreadCountQuery(), ct)));
 
         group.MapPost("/read-all", async (IMediator mediator, CancellationToken ct) =>
         {
@@ -55,10 +55,10 @@ public static class NotificationEndpoints
             .RequireAuthorization();
 
         group.MapGet("/", async (string? search, string? category, IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new ListActivityQuery(search, category), ct)));
+            TypedResults.Ok(await mediator.Send(new ListActivityQuery(search, category), ct)));
 
         group.MapGet("/recent", async (int? n, IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new RecentActivityQuery(n), ct)));
+            TypedResults.Ok(await mediator.Send(new RecentActivityQuery(n), ct)));
 
         return group;
     }

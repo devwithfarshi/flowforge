@@ -28,10 +28,10 @@ public static class MeEndpoints
             .RequireAuthorization();
 
         group.MapGet("/preferences", async (IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new GetPreferencesQuery(), ct)));
+            TypedResults.Ok(await mediator.Send(new GetPreferencesQuery(), ct)));
 
         group.MapPatch("/preferences", async (UpdatePreferencesRequest request, IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(
+            TypedResults.Ok(await mediator.Send(
                 new UpdatePreferencesCommand(
                     request.Theme,
                     request.SidebarCollapsed,
@@ -42,10 +42,10 @@ public static class MeEndpoints
                 ct)));
 
         group.MapGet("/settings", async (IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new GetSettingsQuery(), ct)));
+            TypedResults.Ok(await mediator.Send(new GetSettingsQuery(), ct)));
 
         group.MapPatch("/settings", async (UpdateSettingsRequest request, IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(
+            TypedResults.Ok(await mediator.Send(
                 new UpdateSettingsCommand(
                     request.NotifyOnSuccess,
                     request.NotifyOnFailure,

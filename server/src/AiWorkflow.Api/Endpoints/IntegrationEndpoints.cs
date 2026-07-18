@@ -17,14 +17,14 @@ public static class IntegrationEndpoints
             .RequireAuthorization();
 
         group.MapGet("/", async (IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new ListIntegrationsQuery(), ct)));
+            TypedResults.Ok(await mediator.Send(new ListIntegrationsQuery(), ct)));
 
         group.MapPost("/{id:guid}/connect", async (Guid id, ConnectRequest request, IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(
+            TypedResults.Ok(await mediator.Send(
                 new ConnectIntegrationCommand(id, request.Label, request.Credentials), ct)));
 
         group.MapDelete("/{id:guid}/accounts/{accountId:guid}", async (Guid id, Guid accountId, IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new DisconnectIntegrationCommand(id, accountId), ct)));
+            TypedResults.Ok(await mediator.Send(new DisconnectIntegrationCommand(id, accountId), ct)));
 
         return app;
     }

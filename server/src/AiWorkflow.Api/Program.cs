@@ -75,9 +75,11 @@ app.MapHealthChecks("/health");
 app.MapHealthChecks("/health/live", new HealthCheckOptions { Predicate = _ => false });
 app.MapHealthChecks("/health/ready");
 
+// Serve the OpenAPI document in every environment so the client's Scalar API
+// reference (/api-docs) works in production too; keep the built-in Swagger UI to dev.
+app.UseSwagger();
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
     app.UseSwaggerUI();
 }
 

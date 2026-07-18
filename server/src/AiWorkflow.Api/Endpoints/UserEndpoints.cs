@@ -18,7 +18,7 @@ public static class UserEndpoints
             .RequireAuthorization();
 
         group.MapPatch("/me", async (UpdateProfileRequest request, IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(
+            TypedResults.Ok(await mediator.Send(
                 new UpdateProfileCommand(request.Name, request.JobTitle, request.Company, request.Bio), ct)));
 
         group.MapPost("/me/password", async (ChangePasswordRequest request, IMediator mediator, CancellationToken ct) =>
@@ -30,7 +30,7 @@ public static class UserEndpoints
         // §12/§5: signed direct upload — folder scoped per user, browser uploads
         // straight to the provider and posts the resulting reference back.
         group.MapPost("/me/avatar/sign", (IFileStorage fileStorage, ICurrentUser currentUser) =>
-            Results.Ok(fileStorage.CreateSignedUpload(
+            TypedResults.Ok(fileStorage.CreateSignedUpload(
                 folder: $"users/{currentUser.Id}/avatars",
                 publicId: $"avatar-{Guid.CreateVersion7():N}")));
 

@@ -46,7 +46,7 @@ public static class AuthEndpoints
             var result = await mediator.Send(
                 new LoginCommand(request.Email, request.Password, request.RememberMe, ResolveClient(http)), ct);
             SetRefreshCookie(http, result);
-            return Results.Ok(new AuthResponse(result.AccessToken, result.AccessTokenExpiresAt, result.User));
+            return TypedResults.Ok(new AuthResponse(result.AccessToken, result.AccessTokenExpiresAt, result.User));
         });
 
         group.MapPost("/google", async (GoogleAuthRequest request, HttpContext http, IMediator mediator, CancellationToken ct) =>
@@ -54,7 +54,7 @@ public static class AuthEndpoints
             var result = await mediator.Send(
                 new GoogleAuthCommand(request.IdToken, ResolveClient(http)), ct);
             SetRefreshCookie(http, result);
-            return Results.Ok(new AuthResponse(result.AccessToken, result.AccessTokenExpiresAt, result.User));
+            return TypedResults.Ok(new AuthResponse(result.AccessToken, result.AccessTokenExpiresAt, result.User));
         });
 
         group.MapPost("/refresh", async (HttpContext http, IMediator mediator, CancellationToken ct) =>
@@ -62,7 +62,7 @@ public static class AuthEndpoints
             var refreshToken = http.Request.Cookies[RefreshCookieName] ?? "";
             var result = await mediator.Send(new RefreshSessionCommand(refreshToken, ResolveClient(http)), ct);
             SetRefreshCookie(http, result);
-            return Results.Ok(new RefreshResponse(result.AccessToken, result.AccessTokenExpiresAt));
+            return TypedResults.Ok(new RefreshResponse(result.AccessToken, result.AccessTokenExpiresAt));
         });
 
         group.MapPost("/logout", async (HttpContext http, IMediator mediator, CancellationToken ct) =>
@@ -73,7 +73,7 @@ public static class AuthEndpoints
         });
 
         group.MapGet("/me", async (IMediator mediator, CancellationToken ct) =>
-                Results.Ok(await mediator.Send(new GetCurrentUserQuery(), ct)))
+                TypedResults.Ok(await mediator.Send(new GetCurrentUserQuery(), ct)))
             .RequireAuthorization();
 
         group.MapPost("/forgot-password", async (ForgotPasswordRequest request, IMediator mediator, CancellationToken ct) =>
@@ -89,7 +89,7 @@ public static class AuthEndpoints
         });
 
         group.MapPost("/verify-email", async (VerifyEmailRequest request, IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new VerifyEmailCommand(request.Token), ct)));
+            TypedResults.Ok(await mediator.Send(new VerifyEmailCommand(request.Token), ct)));
 
         return app;
     }

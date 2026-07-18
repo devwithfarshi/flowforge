@@ -13,7 +13,7 @@ public static class SessionEndpoints
             .RequireAuthorization();
 
         group.MapGet("/", async (IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new GetSessionsQuery(), ct)));
+            TypedResults.Ok(await mediator.Send(new GetSessionsQuery(), ct)));
 
         // "others" before "{id:guid}" so it never binds as an id.
         group.MapDelete("/others", async (IMediator mediator, CancellationToken ct) =>

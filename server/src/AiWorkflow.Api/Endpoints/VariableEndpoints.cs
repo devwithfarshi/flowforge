@@ -19,7 +19,7 @@ public static class VariableEndpoints
             .RequireAuthorization();
 
         group.MapGet("/", async (string? search, string? scope, IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new ListVariablesQuery(search, scope), ct)));
+            TypedResults.Ok(await mediator.Send(new ListVariablesQuery(search, scope), ct)));
 
         group.MapPost("/", async (CreateVariableRequest request, IMediator mediator, CancellationToken ct) =>
         {
@@ -29,7 +29,7 @@ public static class VariableEndpoints
         });
 
         group.MapPut("/{id:guid}", async (Guid id, UpdateVariableRequest request, IMediator mediator, CancellationToken ct) =>
-            Results.Ok(await mediator.Send(new UpdateVariableCommand(
+            TypedResults.Ok(await mediator.Send(new UpdateVariableCommand(
                 id, request.Key, request.Value, request.Scope, request.Environment, request.Description), ct)));
 
         group.MapDelete("/{id:guid}", async (Guid id, IMediator mediator, CancellationToken ct) =>
