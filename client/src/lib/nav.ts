@@ -47,6 +47,7 @@ export const SETTINGS_NAV: NavItem[] = [
   { label: "Account", href: "/settings/account", icon: "settings" },
   { label: "Appearance", href: "/settings/appearance", icon: "sun" },
   { label: "API Keys", href: "/settings/api-keys", icon: "key" },
+  { label: "AI providers", href: "/settings/ai-providers", icon: "sparkles" },
   { label: "Security", href: "/settings/security", icon: "shield" },
   { label: "Sessions", href: "/settings/sessions", icon: "monitor" },
 ];

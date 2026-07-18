@@ -248,6 +248,17 @@ export interface ApiKey {
   lastUsedAt: ISODate | null;
 }
 
+/* ---- AI providers (bring-your-own-key) ---- */
+export type AiProvider = "openai" | "gemini" | "anthropic";
+
+export interface AiProviderInfo {
+  provider: AiProvider;
+  configured: boolean;
+  /** Last 4 chars of the stored key, for masked display. Null when not configured. */
+  last4: string | null;
+  updatedAt: ISODate | null;
+}
+
 /* ---- Settings / preferences ---- */
 export type ThemePref = "light" | "dark" | "system";
 export type TableDensity = "comfortable" | "compact";

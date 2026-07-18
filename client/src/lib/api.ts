@@ -11,6 +11,8 @@ import { defaultConfig, getNodeDef } from "@/lib/nodes/catalog";
 import type {
   ActivityCategory,
   ActivityEntry,
+  AiProvider,
+  AiProviderInfo,
   ApiKey,
   Execution,
   Integration,
@@ -999,6 +1001,53 @@ export const apiKeyApi = {
   },
 };
 
+const AI_PROVIDERS: AiProvider[] = ["anthropic", "openai", "gemini"];
+
+/* ========================================================= AI PROVIDERS */
+export const aiProviderApi = {
+  async list(): Promise<AiProviderInfo[]> {
+    return tx(() => {
+      const existing = new Map(
+        coll<AiProviderInfo>(KEYS.aiProviders)
+          .all()
+          .map((p) => [p.provider, p]),
+      );
+      return AI_PROVIDERS.map(
+        (provider) =>
+          existing.get(provider) ?? {
+            provider,
+            configured: false,
+            last4: null,
+            updatedAt: null,
+          },
+      );
+    });
+  },
+  async setKey(provider: AiProvider, apiKey: string): Promise<AiProviderInfo> {
+    return tx(() => {
+      const trimmed = apiKey.trim();
+      if (trimmed.length < 8) {
+        throw new ApiError("That doesn't look like a valid API key.");
+      }
+      const info: AiProviderInfo = {
+        provider,
+        configured: true,
+        last4: trimmed.slice(-4),
+        updatedAt: new Date().toISOString(),
+      };
+      const c = coll<AiProviderInfo>(KEYS.aiProviders);
+      c.set([info, ...c.all().filter((p) => p.provider !== provider)]);
+      return info;
+    });
+  },
+  async remove(provider: AiProvider): Promise<void> {
+    return tx(() => {
+      const c = coll<AiProviderInfo>(KEYS.aiProviders);
+      c.set(c.all().filter((p) => p.provider !== provider));
+    });
+  },
+};
+
 /* =============================================================== SESSIONS */
 export const sessionApi = {
   async list(): Promise<LoginSession[]> {
@@ -1134,6 +1183,7 @@ export const api = {
   notifications: notificationApi,
   activity: activityApi,
   apiKeys: apiKeyApi,
+  aiProviders: aiProviderApi,
   sessions: sessionApi,
   settings: settingsApi,
   stats: statsApi,
